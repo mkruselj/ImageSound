@@ -1,4 +1,4 @@
-from numpy import linspace,sin,pi,int16,int32,ndarray
+from numpy import linspace,sin,pi,int16,int32,array,append
 from scipy.io.wavfile import write
 from pylab import plot,show,axis
 
@@ -51,10 +51,11 @@ class Dsp(object):
 
     def generate_sample(self,ob):
         interpol = 44100/len(ob)
-        tone = []
+        tone = array([])
         for amp in ob:
-            tone.append(self.note(440,interpol,amp*100))
-        tonend = ndarray(tone,int32)
+            tone = append(tone,self.note(440,interpol,amp*100))
+        print tone
+        tonend = ndarray(tone,int16)
         write('ImageSound.wav',44100,tonend)
 
 
