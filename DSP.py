@@ -54,7 +54,7 @@ class Dsp(object):
         tone = array([])
         for amp in ob:
             tone = append(tone,self.note(440,interpol,amp*100))
-        print tone
+        print(tone)
         tonend = ndarray(tone,int16)
         write('ImageSound.wav',44100,tonend)
 
