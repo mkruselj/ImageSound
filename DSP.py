@@ -2,6 +2,8 @@ from numpy import linspace,sin,pi,int16,int32,array,append
 from scipy.io.wavfile import write
 from pylab import plot,show,axis
 
+MAX_AMPLITUDE = 30000
+
 class Dsp(object):
     def __init__(self,img=None):
         self.img = img
@@ -15,12 +17,15 @@ class Dsp(object):
         return data.astype(int16) # two byte integers
 
     def render_segments(self,segs):
+        print "[ * ] Rendering segments..."
         buff = []
         for s in segs.keys():
             buff.append(self.render_segment(segs[s]))
+
         self.sum_buffers(buff)
 
     def render_segment(self,seg):
+        print "[ * ] Rendering individual segment..."
         # print seg
         buff = []
         # get img pixel data
@@ -39,6 +44,7 @@ class Dsp(object):
         return buff
 
     def sum_buffers(self,buffs):
+        print "[ * ] Summing buffers..."
         max_len = 0
         for buff in buffs:
             if len(buff) > max_len:
@@ -50,12 +56,20 @@ class Dsp(object):
         self.generate_sample(out_buff)
 
     def generate_sample(self,ob):
+        print "[ * ] Generating sample..."
         interpol = 44100/len(ob)
-        tone = array([])
+
+        # no interpolation for testing
+        interpol = len(ob)
+        print "[ * ] Length %d samples" % interpol
+
+        tone = []
         for amp in ob:
-            tone = append(tone,self.note(440,interpol,amp*100))
-        print tone
-        tonend = ndarray(tone,int16)
+            print amp
+            new_note = self.note(440,interpol,amp*MAX_AMPLITUDE)
+            tone.extend(new_note)
+        # print tone
+        tonend = array(tone,int16)
         write('ImageSound.wav',44100,tonend)
 
 
