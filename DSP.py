@@ -65,11 +65,11 @@ class Dsp(object):
 
         tone = []
         for amp in ob:
-            print amp
             new_note = self.note(440,interpol,amp*MAX_AMPLITUDE)
             tone.extend(new_note)
         # print tone
         tonend = array(tone,int16)
+
         write('ImageSound.wav',44100,tonend)
 
 

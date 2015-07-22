@@ -10,6 +10,7 @@ from PIL import Image, ImageTk
 import numpy as np
 from scipy import misc
 import time
+import sys
 
 import DSP
 
@@ -212,14 +213,17 @@ class ImageSoundGUI:
             viewport = event.widget
             if self.drawn:
                 viewport.delete(self.drawn)
-            objectId = self.viewport.create_line(self.start.x, self.start.y, event.x, event.y,
-                                                 width=self.harm_count[self.current_tab].get(),
-                                                 fill=self.COLORS[self.current_tab],
-                                                 stipple='gray75', tag='line' + str(self.current_tab))
-            length = int(np.hypot(event.y-self.start.y, event.x-self.start.x))
-            x, y = np.linspace(self.start.x - 4, event.x - 4, length), np.linspace(self.start.y - 4, event.y - 4, length)
-            self.seg['vect' + str(self.current_tab)] = self.imag[x.astype(np.int), y.astype(np.int)]
-            self.drawn = objectId
+            try:
+                objectId = self.viewport.create_line(self.start.x, self.start.y, event.x, event.y,
+                                                     width=self.harm_count[self.current_tab].get(),
+                                                     fill=self.COLORS[self.current_tab],
+                                                     stipple='gray75', tag='line' + str(self.current_tab))
+                length = int(np.hypot(event.y-self.start.y, event.x-self.start.x))
+                x, y = np.linspace(self.start.x - 4, event.x - 4, length), np.linspace(self.start.y - 4, event.y - 4, length)
+                self.seg['vect' + str(self.current_tab)] = self.imag[x.astype(np.int), y.astype(np.int)]
+                self.drawn = objectId
+            except IndexError:
+                print(sys.exc_info()[1])
 
     def OpenFile(self, event=None):
         try:
@@ -230,10 +234,11 @@ class ImageSoundGUI:
                                                             ('Bitmap files', '.bmp'),
                                                             ('JPEG files', '.jpg .jpeg'),
                                                             ('PNG files', '.png')])
-            im = Image.open(imgfile)#.convert('LA')
-            self.imag = np.array(im)
-            self.dsp.set_img(self.imag)
+            im = Image.open(imgfile)
             im_tk = ImageTk.PhotoImage(im)
+            self.imag = np.array(im)
+            self.imag = self.imag.swapaxes(1,0) # swap first two axes, numpy goes Y then X for some reason when importing image
+            self.dsp.set_img(self.imag)
             self.ClearAllLines()
             self.viewport.grid(sticky=N+W)
             self.viewport.config(width=im.size[0] + 4, height=im.size[1] + 4)
