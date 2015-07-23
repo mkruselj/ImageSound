@@ -35,7 +35,7 @@ class ImageSoundGUI:
     imag = None
     seg = {}
     textid = 0
-    dsp = DSP.Dsp()
+    
 
     def __init__(self):
         # root window of the whole program
@@ -184,6 +184,12 @@ class ImageSoundGUI:
         self.viewport.bind('<Button-1>', self.StartLineOrLoadPic)
         self.viewport.bind('<B1-Motion>', self.GrowLine)
         self.viewport.bind('<Configure>', self.ResizeCanvas)
+
+
+        # create DSP object
+        dsp = DSP.Dsp(self)
+
+
 
     def ResizeCanvas(self, event):
         if self.is_img_loaded == 0:

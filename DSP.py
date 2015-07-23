@@ -1,12 +1,13 @@
 from numpy import linspace,sin,pi,int16,int32,array,append
 from scipy.io.wavfile import write
-from pylab import plot,show,axis
+# from pylab import plot,show,axis
 
 MAX_AMPLITUDE = 30000
 
 class Dsp(object):
-    def __init__(self,img=None):
+    def __init__(self,img=None,gui=None):
         self.img = img
+        self.gui = gui
 
     def set_img(self,img):
         self.img = img
@@ -17,26 +18,26 @@ class Dsp(object):
         return data.astype(int16) # two byte integers
 
     def render_segments(self,segs):
-        print "[ * ] Rendering segments..."
-        buff = []
+        print("[ * ] Rendering segments...")
+        buffs = []
         for s in segs.keys():
-            buff.append(self.render_segment(segs[s]))
+            buffs.append(self.render_segment(segs[s]))
 
-        self.sum_buffers(buff)
+        self.sum_buffers(buffs)
 
     def render_segment(self,seg):
-        print "[ * ] Rendering individual segment..."
+        print("[ * ] Rendering individual segment...")
         # print seg
         buff = []
         # get img pixel data
         x,y = seg.shape
         for i in range(x):
-            r = seg[i,0]
+            r,g,b = seg[i,0], seg[i,1], seg[i,2]
             # print r
-            g = seg[i,1]
-            # print g
-            b = seg[i,2]
-            # print b
+            # g = seg[i,1]
+            # # print g
+            # b = seg[i,2]
+            # # print b
             # print "R: %d, G:%d, B:%d" % (r,g,b)
             luminosity = (r+g+b)/3
             # print luminosity
@@ -44,7 +45,7 @@ class Dsp(object):
         return buff
 
     def sum_buffers(self,buffs):
-        print "[ * ] Summing buffers..."
+        print("[ * ] Summing buffers...")
         max_len = 0
         for buff in buffs:
             if len(buff) > max_len:
@@ -56,21 +57,28 @@ class Dsp(object):
         self.generate_sample(out_buff)
 
     def generate_sample(self,ob):
-        print "[ * ] Generating sample..."
+        print("[ * ] Generating sample...")
         interpol = 44100/len(ob)
+        
+        interpol = 4
 
-        # no interpolation for testing
-        interpol = len(ob)
-        print "[ * ] Length %d samples" % interpol
+        print("[ * ] Length %d samples" % interpol)
 
         tone = []
+        first = True
         for amp in ob:
-            new_note = self.note(440,interpol,amp*MAX_AMPLITUDE)
+            if(first):
+                new_note = self.note(440,interpol,amp*MAX_AMPLITUDE)
+            else:
+                new_note += self.note(440,interpol,amp*MAX_AMPLITUDE)
+            shapesize = new_note.shape
+            print("[ * ] Note length %d " % shapesize)
             tone.extend(new_note)
         # print tone
         tonend = array(tone,int16)
 
         write('ImageSound.wav',44100,tonend)
+        print("[ * ] Wrote audio file")
 
 
 if __name__ == '__main__':
@@ -79,6 +87,6 @@ if __name__ == '__main__':
 
     write('440hzAtone.wav',44100,tone) # writing the sound to a file
 
-    plot(linspace(0,2,2*44100),tone)
-    axis([0,0.4,15000,-15000])
-    show()
+    # plot(linspace(0,2,2*44100),tone)
+    # axis([0,0.4,15000,-15000])
+    # show()
