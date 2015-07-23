@@ -237,8 +237,8 @@ class ImageSoundGUI:
                 x, y = np.linspace(self.start.x - 4, currentx - 4, length), np.linspace(self.start.y - 4, currenty - 4, length)
                 self.seg['vect' + str(self.current_tab)] = self.imag[x.astype(np.int), y.astype(np.int)]
                 self.drawn = objectId
-            except IndexError:
-                print(sys.exc_info()[1])
+            except:
+                raise
 
     def OpenFile(self, event=None):
         try:
