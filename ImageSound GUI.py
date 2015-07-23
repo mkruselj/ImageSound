@@ -214,12 +214,27 @@ class ImageSoundGUI:
             if self.drawn:
                 viewport.delete(self.drawn)
             try:
-                objectId = self.viewport.create_line(self.start.x, self.start.y, event.x, event.y,
+                imgsize = (int(self.viewport.cget('width')) - 1,int(self.viewport.cget('height')) - 1)
+                # limit the draggable mouse area to just the image dimensions
+                if event.x < 4:
+                    currentx = 4
+                elif event.x > imgsize[0]:
+                    currentx = imgsize[0]
+                else:
+                    currentx = event.x
+                if event.y < 4:
+                    currenty = 4
+                elif event.y > imgsize[1]:
+                    currenty = imgsize[1]
+                else:
+                    currenty = event.y
+                # draw the vector
+                objectId = self.viewport.create_line(self.start.x, self.start.y, currentx, currenty,
                                                      width=self.harm_count[self.current_tab].get(),
                                                      fill=self.COLORS[self.current_tab],
                                                      stipple='gray75', tag='line' + str(self.current_tab))
-                length = int(np.hypot(event.y-self.start.y, event.x-self.start.x))
-                x, y = np.linspace(self.start.x - 4, event.x - 4, length), np.linspace(self.start.y - 4, event.y - 4, length)
+                length = int(np.hypot(currenty-self.start.y, currentx-self.start.x))
+                x, y = np.linspace(self.start.x - 4, currentx - 4, length), np.linspace(self.start.y - 4, currenty - 4, length)
                 self.seg['vect' + str(self.current_tab)] = self.imag[x.astype(np.int), y.astype(np.int)]
                 self.drawn = objectId
             except IndexError:
