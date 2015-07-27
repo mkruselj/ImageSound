@@ -1,9 +1,10 @@
 from numpy import linspace,sin,pi,int16,int32,array,append,interp,arange,logical_not
 from numpy import multiply
 from scipy.io.wavfile import write
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d, UnivariateSpline
 # from pylab import plot,show,axis
 from midinotes import generate_midi_dict
+import matplotlib.pyplot as plt
 
 MAX_AMPLITUDE = 30000
 
@@ -100,10 +101,10 @@ class Dsp(object):
                     pass
 
         # generate sine wave
-        sine = self.note(base_freq,buffer_length)
+        sine = self.note(base_freq,buffer_length/1000)
 
         # generate the amplitude buffer to be same size as sine
-        amplitude_buff_space = linspace(0,buffer_length/1000,buffer_length*44100)
+        # amplitude_buff_space = arange(0,(buffer_length/1000)*44100)
         # luminosity_buff_space = linspace(0,buffer_length/1000,buffer_length*44100)
         luminosity_values = []
         
@@ -118,29 +119,20 @@ class Dsp(object):
 
         # now interpolate the values with the amplitude buffer
         luminosity_values = array(luminosity_values)
-        print("Amplitude shape ")
-        print(amplitude_buff_space.shape)
-        print("Luminosity shape ")
-        print(luminosity_values.shape)
+        luminosity_x = linspace(0,1,len(luminosity_values))
+        # plt.plot(luminosity_x,luminosity_values,'ro',ms=5)
+        # plt.show()
+        spl = UnivariateSpline(luminosity_x,luminosity_values,k=1)
+        spl.set_smoothing_factor(0.5)
+        amplitude_buff_space = linspace(0,1,(buffer_length/1000)*44100)
 
-        num_pixels = luminosity_values.shape[0]
-        buff_length = amplitude_buff_space.shape[0]
-        interp_distance = buffer_length / num_pixels
+        # plt.plot(amplitude_buff_space, spl(amplitude_buff_space),'g',lw=3)
+        # plt.show()
 
-        for i in range(len(luminosity_values)):
-            amplitude_buff_space[ i * interp_distance ] = luminosity_values[i]
-
-        indices = arange(len(amplitude_buff_space))
-        print(len(indices))
-        # not_0 = logical_not( amplitude_buff_space != 0 )
-        # print(len(not_0))
-        amplitude_buff = interp1d(indices, amplitude_buff_space)
-        
-        print(amplitude_buff(indices))
 
         # now return note * amplitude_buff
         print("[ * ] Modulating sine wav")
-        rendered = multiply(sine, amplitude_buff(indices))
+        rendered = multiply(sine, spl(amplitude_buff_space))
         return rendered
 
     def sum_buffers(self,buffs):
@@ -158,8 +150,13 @@ class Dsp(object):
     def generate_sample(self,ob):
         print("[ * ] Generating sample...")
         
-        tone_out = array(ob)
-        tone_out *= 30000
+        tone_out = array(ob,dtype=int16)
+        tone_out *= MAX_AMPLITUDE
+
+        plt.plot(arange(0,len(tone_out)),tone_out,'g',lw=3)
+        plt.show()
+
+
         write('ImageSound.wav',44100,tone_out)
         print("[ * ] Wrote audio file")
 
