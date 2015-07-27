@@ -35,7 +35,6 @@ class ImageSoundGUI:
     imag = None
     seg = {}
     textid = 0
-    
 
     def __init__(self):
         # root window of the whole program
@@ -91,9 +90,9 @@ class ImageSoundGUI:
         self.viewport = Canvas(self.root, bd=2, relief='ridge', highlightthickness=0)
 
         # define master buttons for audio preview, render to file and clear all vectors
-        btn_preview = Button(self.root, text='Preview', command=self.PreviewAudio)
-        btn_render = Button(self.root, text='Render', command=self.RenderToFile)
-        btn_clear = Button(self.root, text='Clear All', command=self.ClearAllLines)
+        self.btn_preview = Button(self.root, text='Preview', state=DISABLED, command=self.PreviewAudio)
+        self.btn_render = Button(self.root, text='Render', state=DISABLED, command=self.RenderToFile)
+        self.btn_clear = Button(self.root, text='Clear All', command=self.ClearAllLines)
 
         # define a notebook for vector properties
         self.tabs = ttk.Notebook(self.root)
@@ -162,9 +161,9 @@ class ImageSoundGUI:
 
         # layout managing
         self.viewport.grid(columnspan=3, padx=5, pady=5, sticky=N+S+W+E)
-        btn_preview.grid(row=1, padx=85, pady=10, ipadx=5, ipady=5, sticky=W)
-        btn_render.grid(row=1, padx=200, pady=10, ipadx=5, ipady=5, sticky=W)
-        btn_clear.grid(row=1, padx=305, pady=10, ipadx=5, ipady=5, sticky=W)
+        self.btn_preview.grid(row=1, padx=85, pady=10, ipadx=5, ipady=5, sticky=W)
+        self.btn_render.grid(row=1, padx=200, pady=10, ipadx=5, ipady=5, sticky=W)
+        self.btn_clear.grid(row=1, padx=305, pady=10, ipadx=5, ipady=5, sticky=W)
         self.tabs.grid(row=2, padx=5, pady=5, ipadx=5, ipady=2, sticky=W)
 
         # weights of rows and columns
@@ -184,7 +183,6 @@ class ImageSoundGUI:
         self.viewport.bind('<Button-1>', self.StartLineOrLoadPic)
         self.viewport.bind('<B1-Motion>', self.GrowLine)
         self.viewport.bind('<Configure>', self.ResizeCanvas)
-
 
         # create DSP object
         self.dsp = DSP.Dsp(gui=self)
@@ -265,6 +263,8 @@ class ImageSoundGUI:
             self.viewport.config(width=im.size[0] + 4, height=im.size[1] + 4)
             self.is_img_loaded = im_tk
             sprite = self.viewport.create_image((4, 4), anchor=NW, image=im_tk)
+            self.btn_preview.config(state=NORMAL)
+            self.btn_render.config(state=NORMAL)
         except:
             print('File not found, or dialog cancelled!')
             raise

@@ -17,7 +17,6 @@ class Dsp(object):
         self.odds = [x for x in range(128) if x % 2]
         self.evens = [x for x in range(128) if not x % 2]
 
-
     def set_img(self,img):
         self.img = img
 
@@ -30,33 +29,30 @@ class Dsp(object):
         print("[ * ] Rendering segments...")
         buffs = []
         for k in segs.keys():
-            print("[ * ] %d" % k)
+            print("[ * ] %s" % k)
             buffs.append(self.render_segment(segs[k],k))
 
         self.sum_buffers(buffs)
 
     def render_segment(self,seg, key):
         print("[ * ] Rendering individual segment...")
-        
+
         # get length of buffer for segment
         buffer_length = int(self.gui.read_speed[key].get())
         midi_note_number = self.gui.baseline_freq[key].get()
         harm_mode = self.gui.harm_mode_var[key].get()
         harm_count = self.gui.harm_count[key].get()
-
         base_freq = self.midi_notes[int(midi_note_number)]
 
         print("[ * ] Buffer length: %s" % buffer_length)
-        print("[ * ] MIDI Note Num: %s" % midi_note_number)
+        print("[ * ] MIDI Note: %s" % midi_note_number)
         print("[ * ] Harmonic Mode: %s" % harm_mode)
         print("[ * ] Harmonic Count: %s" % harm_count)
-        print("[ * ] Base frequency: %s" % base_freq)
+        print("[ * ] Base Frequency: %s" % base_freq)
 
         # handle harmonic settings
-
         harmonics = []
         harmonics.append(base_freq)
-        
 
         # we only can handle first harmonic right now
         # so override anything from interface
@@ -106,7 +102,7 @@ class Dsp(object):
         amplitude_buff_space = linspace(0,buffer_length/1000,buffer_length*44100)
         # luminosity_buff_space = linspace(0,buffer_length/1000,buffer_length*44100)
         luminosity_values = []
-        
+
         # get img pixel luminosity data
         # this will work for 1d arrays, but not nd arrays
         x,y = seg.shape
@@ -135,7 +131,7 @@ class Dsp(object):
         # not_0 = logical_not( amplitude_buff_space != 0 )
         # print(len(not_0))
         amplitude_buff = interp1d(indices, amplitude_buff_space)
-        
+
         print(amplitude_buff(indices))
 
         # now return note * amplitude_buff
@@ -157,19 +153,17 @@ class Dsp(object):
 
     def generate_sample(self,ob):
         print("[ * ] Generating sample...")
-        
+
         tone_out = array(ob)
         tone_out *= 30000
         write('ImageSound.wav',44100,tone_out)
         print("[ * ] Wrote audio file")
 
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
      # A tone, 2 seconds, 44100 samples per second
-    tone = note(440,2,amp=10000)
-
-    write('440hzAtone.wav',44100,tone) # writing the sound to a file
-
+    # tone = note(440,2,amp=10000)
+    # write('440hzAtone.wav',44100,tone) # writing the sound to a file
     # plot(linspace(0,2,2*44100),tone)
     # axis([0,0.4,15000,-15000])
     # show()
