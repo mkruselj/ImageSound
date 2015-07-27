@@ -187,7 +187,7 @@ class ImageSoundGUI:
 
 
         # create DSP object
-        dsp = DSP.Dsp(self)
+        self.dsp = DSP.Dsp(gui=self)
 
 
 
@@ -241,7 +241,7 @@ class ImageSoundGUI:
                                                      stipple='gray75', tag='line' + str(self.current_tab))
                 length = int(np.hypot(currenty-self.start.y, currentx-self.start.x))
                 x, y = np.linspace(self.start.x - 4, currentx - 4, length), np.linspace(self.start.y - 4, currenty - 4, length)
-                self.seg['vect' + str(self.current_tab)] = self.imag[x.astype(np.int), y.astype(np.int)]
+                self.seg[self.current_tab] = self.imag[x.astype(np.int), y.astype(np.int)]
                 self.drawn = objectId
             except:
                 raise
