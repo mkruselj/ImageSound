@@ -113,7 +113,7 @@ class Dsp(object):
         x,y = seg.shape
         for i in range(x):
             r,g,b = seg[i,0], seg[i,1], seg[i,2]
-            luminosity = (r+r+b+g+g+g)/6
+            luminosity = (r+r+b+g+g+g)/1530.0
             # print luminosity
             luminosity_values.append(luminosity)
 
