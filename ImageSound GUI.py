@@ -196,6 +196,8 @@ class ImageSoundGUI:
 
     def ClearAllLines(self, event=None):
         if self.is_img_loaded != 0:
+            self.btn_preview.config(state=DISABLED)
+            self.btn_render.config(state=DISABLED)
             self.seg.clear()
             for i in range(self.NUM_TABS):
                 self.viewport.delete('line' + str(i))
@@ -209,6 +211,9 @@ class ImageSoundGUI:
 
     def GrowLine(self, event):
         if self.is_img_loaded != 0:
+            if self.btn_preview.cget('state') == DISABLED:
+                self.btn_preview.config(state=NORMAL)
+                self.btn_render.config(state=NORMAL)
             if self.objectId != 0:
                 event.widget.delete('line' + str(self.current_tab))
             viewport = event.widget
@@ -260,8 +265,6 @@ class ImageSoundGUI:
             self.viewport.config(width=im.size[0] + 4, height=im.size[1] + 4)
             self.is_img_loaded = im_tk
             sprite = self.viewport.create_image((4, 4), anchor=NW, image=im_tk)
-            self.btn_preview.config(state=NORMAL)
-            self.btn_render.config(state=NORMAL)
         except:
             print('File not found, or dialog cancelled!')
             raise

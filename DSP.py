@@ -148,7 +148,7 @@ class Dsp(object):
         out_buff = [0]*max_len
         for buff in buffs:
             for i in range(len(buff)):
-                out_buff[i] += buff[i]
+                out_buff[i] += buff[i] / len(buffs) # dividing with number of vectors used to prevent clipping
         self.generate_sample(out_buff, preview)
 
     def generate_sample(self, ob, preview):
