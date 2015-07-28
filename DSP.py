@@ -24,8 +24,9 @@ class Dsp(object):
     def note(self,freq, len, amp=1, rate=44100):
         t = linspace(0,len,len*rate)
         data = sin(2*pi*freq*t)*amp
-        print(data)
+        # print(data)
         return data.astype(int16) # two byte integers
+        # return data.astype(int32) # four byte integers
 
     def render_segments(self,segs):
         print("[ * ] Rendering segments...")
@@ -98,7 +99,7 @@ class Dsp(object):
                     pass
 
         # generate sine wave
-        sine = self.note(base_freq,buffer_length/1000, amp=2)
+        sine = self.note(base_freq,buffer_length/1000, amp=1.1)
         plt.plot(sine,'b',lw=3 )
         plt.show()
 
@@ -167,10 +168,10 @@ class Dsp(object):
         print("[ * ] Wrote audio file")
 
 
-#if __name__ == '__main__':
-     # A tone, 2 seconds, 44100 samples per second
-    # tone = note(440,2,amp=10000)
-    # write('440hzAtone.wav',44100,tone) # writing the sound to a file
-    # plot(linspace(0,2,2*44100),tone)
-    # axis([0,0.4,15000,-15000])
-    # show()
+if __name__ == '__main__':
+    # A tone, 2 seconds, 44100 samples per second
+    dsp = Dsp()
+    tone = dsp.note(440,2,amp=10000)
+    write('440hzAtone.wav',44100,tone) # writing the sound to a file
+    plt.plot(linspace(0,2,2*44100),tone,'b',lw=3)
+    plt.show()
