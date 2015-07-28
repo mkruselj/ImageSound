@@ -6,7 +6,7 @@ from scipy.interpolate import interp1d, UnivariateSpline
 from midinotes import generate_midi_dict
 import matplotlib.pyplot as plt
 
-MAX_AMPLITUDE = 30000
+MAX_AMPLITUDE = 32767
 
 class Dsp(object):
     def __init__(self,img=None,gui=None):
@@ -99,7 +99,7 @@ class Dsp(object):
                     pass
 
         # generate sine wave
-        sine = self.note(base_freq,buffer_length/1000, amp=1.1)
+        sine = self.note(base_freq,buffer_length/1000, amp=MAX_AMPLITUDE)
         plt.plot(sine,'b',lw=3 )
         plt.show()
 
@@ -159,7 +159,7 @@ class Dsp(object):
         # plt.show()
         
         tone_out = array(ob,dtype=int16)
-        tone_out *= MAX_AMPLITUDE
+        # tone_out *= MAX_AMPLITUDE
 
         # plt.plot(arange(0,len(tone_out)),tone_out,'g',lw=3)
         # plt.show()
