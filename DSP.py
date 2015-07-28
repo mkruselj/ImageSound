@@ -80,8 +80,9 @@ class Dsp(object):
                 elif harm_mode == 'Skip 3':
                     freq = base_freq * (self.odds[h] + h)
                     harmonics.append(freq)
-                elif harm_mode == 'Prime':
-                    pass
+                elif harm_mode == 'Skip 4':
+                    freq = base_freq * (self.odds[h] + h + h)
+                    harmonics.append(freq)
                 elif harm_mode == 'Sub All':
                     freq = base_freq / h
                     harmonics.append(freq)
@@ -97,8 +98,9 @@ class Dsp(object):
                 elif harm_mode == 'Sub Skip 3':
                     freq = base_freq * (self.odds[h] + h)
                     harmonics.append(freq)
-                elif harm_mode == 'Sub Prime':
-                    pass
+                elif harm_mode == 'Sub Skip 4':
+                    freq = base_freq * (self.odds[h] + h + h)
+                    harmonics.append(freq)
 
         # generate empty buffer for delay time
         dly = self.note(1,delay_buffer_length/1000, amp=0)

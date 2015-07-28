@@ -4,8 +4,7 @@ try:
     import ttk
 except ImportError:
     from tkinter import *
-    from tkinter import filedialog
-    from tkinter import ttk
+    from tkinter import filedialog, ttk
 from PIL import Image, ImageTk
 import numpy as np
 from scipy import misc
@@ -19,8 +18,8 @@ class ImageSoundGUI:
     NUM_PARTIALS = 128
     COLORS = ('#FF0000', '#FF9900', '#FFBB00', '#FFFF00', '#99FF00', '#00FF00', '#00FF99', '#00FFCC',
               '#00CCFF', '#0099FF', '#0000FF', '#9900FF', '#CC00FF', '#FF00FF', '#FF0099', '#FF9999')
-    MODE_OPT = ['All', 'Even', 'Odd', 'Skip 2', 'Skip 3', 'Prime', 'Sub All',
-                'Sub Even', 'Sub Odd', 'Sub Skip 2', 'Sub Skip 3', 'Sub Prime']
+    MODE_OPT = ['All', 'Even', 'Odd', 'Skip 2', 'Skip 3', 'Skip 4', 'Sub All',
+                'Sub Even', 'Sub Odd', 'Sub Skip 2', 'Sub Skip 3', 'Sub Skip 4']
     labels = []  # tkinter widget IDs for all labels
     harm_count = []  # tkinter widget IDs for all Harmonics Count spinboxes
     baseline_freq = []  # tkinter widget IDs for all Baseline spinboxes
