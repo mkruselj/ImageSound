@@ -11,7 +11,6 @@ import numpy as np
 from scipy import misc
 import time
 import sys
-
 import DSP
 
 
@@ -187,8 +186,6 @@ class ImageSoundGUI:
         # create DSP object
         self.dsp = DSP.Dsp(gui=self)
 
-
-
     def ResizeCanvas(self, event):
         if self.is_img_loaded == 0:
             if self.textid != 0:
@@ -270,10 +267,10 @@ class ImageSoundGUI:
             raise
 
     def PreviewAudio(self, event=None):
-        print('Nothing happening yet, gotta write the function!')
+        self.dsp.render_segments(self.seg, preview=True)
 
     def RenderToFile(self, event=None):
-        self.dsp.render_segments(self.seg)
+        self.dsp.render_segments(self.seg, preview=False)
 
     def About(self, event=None):
         aboutscreen = Toplevel()
