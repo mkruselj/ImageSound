@@ -24,6 +24,7 @@ class Dsp(object):
     def note(self,freq, len, amp=1, rate=44100):
         t = linspace(0,len,len*rate)
         data = sin(2*pi*freq*t)*amp
+        print(data)
         return data.astype(int16) # two byte integers
 
     def render_segments(self,segs):
@@ -97,7 +98,9 @@ class Dsp(object):
                     pass
 
         # generate sine wave
-        sine = self.note(base_freq,buffer_length/1000)
+        sine = self.note(base_freq,buffer_length/1000, amp=2)
+        plt.plot(sine,'b',lw=3 )
+        plt.show()
 
         # generate the amplitude buffer to be same size as sine
         # amplitude_buff_space = arange(0,(buffer_length/1000)*44100)
@@ -130,7 +133,10 @@ class Dsp(object):
 
         # now return note * amplitude_buff
         print("[ * ] Modulating sine wav")
-        rendered = multiply(sine, spl(amplitude_buff_space))
+        rendered = sine *  spl(amplitude_buff_space)
+        print(rendered)
+        plt.plot(arange(0,len(rendered)),rendered,'r',lw=3)
+        plt.show()
         return rendered
 
     def sum_buffers(self,buffs):
@@ -148,12 +154,14 @@ class Dsp(object):
     def generate_sample(self,ob):
         print("[ * ] Generating sample...")
 
+        # plt.plot(arange(0,len(ob)),ob,'g',lw=3)
+        # plt.show()
         
         tone_out = array(ob,dtype=int16)
         tone_out *= MAX_AMPLITUDE
 
-        plt.plot(arange(0,len(tone_out)),tone_out,'g',lw=3)
-        plt.show()
+        # plt.plot(arange(0,len(tone_out)),tone_out,'g',lw=3)
+        # plt.show()
 
         write('ImageSound.wav',44100,tone_out)
         print("[ * ] Wrote audio file")
