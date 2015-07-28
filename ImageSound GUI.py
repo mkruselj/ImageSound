@@ -46,7 +46,7 @@ class ImageSoundGUI:
         self.h = self.wh * 0.75
         self.x = (self.ws / 2) - (self.w / 2)
         self.y = (self.wh / 2) - (self.h / 2)
-        self.root.geometry('800x600+%d+%d' % (self.x, self.y))
+        self.root.geometry('800x600+%d+%d' % (self.x-25, self.y))
 
         # maximize the window on program open
         # self.root.state('zoomed')
@@ -269,18 +269,23 @@ class ImageSoundGUI:
             raise
 
     def PreviewAudio(self, event=None):
-        self.dsp.render_segments(self.seg, preview=True)
+        if self.btn_preview.cget('state') != DISABLED:
+            self.dsp.render_segments(self.seg, preview=True)
 
     def RenderToFile(self, event=None):
-        self.dsp.render_segments(self.seg, preview=False)
+        if self.btn_render.cget('state') != DISABLED:
+            self.dsp.render_segments(self.seg, preview=False)
 
     def About(self, event=None):
         aboutscreen = Toplevel()
         aboutscreen.title('About ImageSound')
-        info = Label(aboutscreen, text='Programmed by Mario Kruselj\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n 2015', justify='left')
+        info = Label(aboutscreen, text='Programmed by Mario Krušelj\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n © 2015-20xx', justify='left')
         info.grid(padx=10, pady=10)
+        pic = ImageTk.PhotoImage(Image.open('ETFOS.png'))
+        logo = Label(aboutscreen, image=pic)
+        logo.grid(row=0, column=1, padx=5, pady=5)
         closeabout = Button(aboutscreen, text='Close', padx=5, pady=5, command=aboutscreen.destroy)
-        closeabout.grid(row=1, column=1, padx=10, pady=10)
+        closeabout.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
         closeabout.focus_force()
         aboutscreen.bind('<Escape>', lambda close: aboutscreen.destroy())
         aboutscreen.bind('<Return>', lambda close: aboutscreen.destroy())
