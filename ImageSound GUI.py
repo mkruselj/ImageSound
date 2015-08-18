@@ -107,7 +107,7 @@ class ImageSoundGUI:
             label = Label(frame, text='Harmonics Count:')
             label.grid(row=0, padx=10, pady=5, sticky=E)
             self.labels += [label]
-            self.harm_count += [Spinbox(frame, from_=1, to=self.NUM_PARTIALS, width=5, justify='right', validate='all', validatecommand=self.vldt_ifnum_cmd)]
+            self.harm_count += [Spinbox(frame, command=self.AdjustLineWidth, from_=1, to=self.NUM_PARTIALS, width=5, justify='right', validate='all', validatecommand=self.vldt_ifnum_cmd)]
             self.harm_count[i].insert(0, 8)
             self.harm_count[i].delete(1, 'end')
             self.harm_count[i].grid(padx=5, pady=10, row=0, column=1, sticky=W)
@@ -244,6 +244,11 @@ class ImageSoundGUI:
                 self.drawn = objectId
             except:
                 raise
+
+    def AdjustLineWidth(self):
+        tag = 'line' + str(self.current_tab)
+        if self.viewport.find_withtag(tag):
+            self.viewport.itemconfig(tag,width=self.harm_count[self.current_tab].get())
 
     def OpenFile(self, event=None):
         try:
