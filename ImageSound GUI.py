@@ -31,6 +31,7 @@ class ImageSoundGUI:
     drawn = None
     objectId = None
     imag = None
+    imgsize = []
     seg = {}
     textid = 0
 
@@ -58,6 +59,10 @@ class ImageSoundGUI:
                               accelerator='Ctrl+O',
                               underline=0,
                               command=self.OpenFile)
+        menu_file.add_command(label='Close Image...',
+                              accelerator='Ctrl+Q',
+                              underline=0,
+                              command=self.CloseFile)
         menu_file.add_command(label='Preview Audio',
                               accelerator='Ctrl+P',
                               underline=0,
@@ -67,8 +72,8 @@ class ImageSoundGUI:
                               underline=0,
                               command=self.RenderToFile)
         menu_file.add_command(label='Clear All Lines',
-                              accelerator='Ctrl+Q',
-                              underline=0,
+                              accelerator='Ctrl+L',
+                              underline=8,
                               command=self.ClearAllLines)
         menu_file.add_separator()
         menu_file.add_command(label='Exit',
@@ -172,9 +177,10 @@ class ImageSoundGUI:
 
         # bind keyboard shortcuts
         self.root.bind('<Control-o>', self.OpenFile)
+        self.root.bind('<Control-q>', self.CloseFile)
         self.root.bind('<Control-p>', self.PreviewAudio)
         self.root.bind('<Control-r>', self.RenderToFile)
-        self.root.bind('<Control-q>', self.ClearAllLines)
+        self.root.bind('<Control-l>', self.ClearAllLines)
         self.root.bind('<F12>', self.About)
 
         # bind mouse actions for the canvas
@@ -188,7 +194,7 @@ class ImageSoundGUI:
     def ResizeCanvas(self, event):
         if self.is_img_loaded == 0:
             if self.textid != 0:
-                event.widget.delete('openfiletext')
+                self.viewport.delete('openfiletext')
             # position text on canvas to notify user he can load the image by clicking it
             textpos = (self.viewport.winfo_width(), self.viewport.winfo_height())
             self.textid = self.viewport.create_text(textpos[0] / 2, textpos[1] / 2, text="Click here to load an image!", justify='center', font='arial 20 bold', tag='openfiletext')
@@ -219,18 +225,17 @@ class ImageSoundGUI:
             if self.drawn:
                 viewport.delete(self.drawn)
             try:
-                imgsize = (int(self.viewport.cget('width')) - 1,int(self.viewport.cget('height')) - 1)
                 # limit the draggable mouse area to just the image dimensions
                 if event.x < 4:
                     currentx = 4
-                elif event.x > imgsize[0]:
-                    currentx = imgsize[0]
+                elif event.x > self.imgsize[0]:
+                    currentx = self.imgsize[0]
                 else:
                     currentx = event.x
                 if event.y < 4:
                     currenty = 4
-                elif event.y > imgsize[1]:
-                    currenty = imgsize[1]
+                elif event.y > self.imgsize[1]:
+                    currenty = self.imgsize[1]
                 else:
                     currenty = event.y
                 # draw the vector
@@ -250,6 +255,13 @@ class ImageSoundGUI:
         if self.viewport.find_withtag(tag):
             self.viewport.itemconfig(tag,width=self.harm_count[self.current_tab].get())
 
+    def CloseFile(self, event=None):
+        self.viewport.delete('image')
+        self.viewport.grid(sticky=N+S+W+E)
+        self.ClearAllLines(event=None)
+        self.ResizeCanvas(event=None)
+        self.is_img_loaded = 0
+
     def OpenFile(self, event=None):
         try:
             # keeps the reference to loaded image in this variable
@@ -267,11 +279,12 @@ class ImageSoundGUI:
             self.ClearAllLines()
             self.viewport.grid(sticky=N+W)
             self.viewport.config(width=im.size[0] + 4, height=im.size[1] + 4)
+            self.imgsize = (int(self.viewport.cget('width')) - 1,int(self.viewport.cget('height')) - 1)
             self.is_img_loaded = im_tk
-            sprite = self.viewport.create_image((4, 4), anchor=NW, image=im_tk)
+            sprite = self.viewport.create_image((4, 4), anchor=NW, image=im_tk, tag='image')
         except:
             print('File not found, or dialog cancelled!')
-            raise
+            #raise
 
     def PreviewAudio(self, event=None):
         if self.btn_preview.cget('state') != DISABLED:
@@ -284,11 +297,11 @@ class ImageSoundGUI:
     def About(self, event=None):
         aboutscreen = Toplevel()
         aboutscreen.title('About ImageSound')
-        info = Label(aboutscreen, text='Programmed by Mario Krušelj\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n © 2015-20xx', justify='left')
-        info.grid(padx=10, pady=10)
-        pic = ImageTk.PhotoImage(Image.open('ETFOS.png'))
+        info = Label(aboutscreen, text='Programmed by Mario Krušelj\n\n\nMaster\'s Degree Thesis\n\nConverting Digital Image to Sound\nUsing Additive Synthesis\n\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n\n© 2015-20xx', justify='left')
+        info.grid(padx=10, pady=10, sticky=N)
+        pic = ImageTk.PhotoImage(Image.open('mario.png'))
         logo = Label(aboutscreen, image=pic)
-        logo.grid(row=0, column=1, padx=5, pady=5)
+        logo.grid(row=0, column=1, padx=10, pady=10)
         closeabout = Button(aboutscreen, text='Close', padx=5, pady=5, command=aboutscreen.destroy)
         closeabout.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
         closeabout.focus_force()
