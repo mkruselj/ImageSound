@@ -292,7 +292,11 @@ class ImageSoundGUI:
 
     def RenderToFile(self, event=None):
         if self.btn_render.cget('state') != DISABLED:
-            self.dsp.render_segments(self.seg, preview=False)
+            outfile = filedialog.asksaveasfilename(title='Render To File...', filetypes=[('WAV files', '.wav')], defaultextension='.wav')
+            if outfile != '':
+                self.dsp.render_segments(self.seg, preview=False, filename=outfile)
+            else:
+                return
 
     def About(self, event=None):
         aboutscreen = Toplevel()

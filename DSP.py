@@ -2,10 +2,12 @@ from numpy import linspace,sin,pi,int16,array,append,arange,multiply
 from scipy.io.wavfile import write
 from scipy.interpolate import interp1d, UnivariateSpline
 import matplotlib.pyplot as plt
+import pyaudio
 
+CHUNK = 1024
 MAX_AMPLITUDE = 32767
-SAMPLE_RATE = 44100			# processing sample rate
-OUTPUT_SAMPLE_RATE = 44100	# output file sample rate
+SAMPLE_RATE = 48000			# processing sample rate
+OUTPUT_SAMPLE_RATE = 48000	# output file sample rate
 
 class Dsp(object):
     def __init__(self, img=None, gui=None):
@@ -33,12 +35,12 @@ class Dsp(object):
         data = sin(2 * pi * freq * t) * amp
         return data.astype(int16)
 
-    def render_segments(self, segs, preview):
+    def render_segments(self, segs, preview, filename):
         print("* Rendering vectors...")
         buffs = []
         for k in segs.keys():
             buffs.append(self.render_segment(segs[k],k))
-        self.sum_buffers(buffs, preview)
+        self.sum_buffers(buffs, preview, filename)
 
     def render_segment(self, seg, key):
         print("  * Vector %d:" % (key + 1))
@@ -132,7 +134,7 @@ class Dsp(object):
 
         return rendered
 
-    def sum_buffers(self, buffs, preview):
+    def sum_buffers(self, buffs, preview, filename):
         print("* Summing vector buffers...")
         max_len = 0
         for buff in buffs:
@@ -142,15 +144,24 @@ class Dsp(object):
         for buff in buffs:
             for i in range(len(buff)):
                 out_buff[i] += buff[i] / len(buffs) # dividing with number of vectors used to prevent clipping
-        self.generate_sample(out_buff, preview)
+        self.generate_sample(out_buff, preview, filename)
 
-    def generate_sample(self, ob, preview):
+    def generate_sample(self, ob, preview, filename):
         print("* Generating sample...")
         tone_out = array(ob, dtype=int16)
 
         if preview:
-            # this is where the ndarray should be pointed to a PyAudio stream...
             print("* Previewing audio file...")
+
+            bytestream = tone_out.tobytes()
+            pya = pyaudio.PyAudio()
+            stream = pya.open(format=pya.get_format_from_width(width=2), channels=1, rate=OUTPUT_SAMPLE_RATE, output=True)
+            stream.write(bytestream)
+            stream.stop_stream()
+            stream.close()
+
+            pya.terminate()
+            print("* Preview completed!")
         else:
-            write('ImageSound.wav',SAMPLE_RATE,tone_out)
+            write(filename, OUTPUT_SAMPLE_RATE, tone_out)
             print("* Wrote audio file!")
