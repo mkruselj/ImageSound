@@ -1,15 +1,13 @@
 from numpy import linspace,sin,pi,int16,array,append,arange,multiply
-from scipy.io.wavfile import write
-from scipy.interpolate import interp1d, UnivariateSpline
-import matplotlib.pyplot as plt
+from scipy.io.wavfile import write as writewav
+from scipy.interpolate import UnivariateSpline as interpolate
 import pyaudio
 
-CHUNK = 1024
 MAX_AMPLITUDE = 32767
-SAMPLE_RATE = 48000			# processing sample rate
-OUTPUT_SAMPLE_RATE = 48000	# output file sample rate
+SAMPLE_RATE = 44100
 
 class Dsp(object):
+
     def __init__(self, img=None, gui=None):
         self.img = img
         self.gui = gui
@@ -99,17 +97,17 @@ class Dsp(object):
                     freq = base_freq / self.odds[h]
                     harmonics.append(freq)
                 elif harm_mode == 'Sub Skip 3':
-                    freq = base_freq * (self.odds[h] + h)
+                    freq = base_freq / (self.odds[h] + h)
                     harmonics.append(freq)
                 elif harm_mode == 'Sub Skip 4':
-                    freq = base_freq * (self.odds[h] + h + h)
+                    freq = base_freq / (self.odds[h] + h + h)
                     harmonics.append(freq)
 
         # generate empty buffer for delay time
-        dly = self.note(1,delay_buffer_length / 1000, amp=0)
+        dly = self.note(1,delay_buffer_length / 1000, amp=0, rate=SAMPLE_RATE)
 
         # generate sine wave
-        sine = self.note(base_freq,buffer_length / 1000, amp=MAX_AMPLITUDE)
+        sine = self.note(base_freq,buffer_length / 1000, amp=MAX_AMPLITUDE, rate=SAMPLE_RATE)
 
         # get pixel luminosity data
         # this will work for 1d arrays, but not nd arrays
@@ -123,7 +121,7 @@ class Dsp(object):
         # now interpolate the values with the amplitude buffer
         luminosity_values = array(luminosity_values)
         luminosity_x = linspace(0,1,len(luminosity_values))
-        spl = UnivariateSpline(luminosity_x, luminosity_values, k=1, s=0)
+        spl = interpolate(luminosity_x, luminosity_values, k=1, s=0)
         amplitude_buff_space = linspace(0,1,(buffer_length / 1000) * SAMPLE_RATE)
 
         print("  * Applying luminosity values to sine wave amplitudes")
@@ -155,7 +153,7 @@ class Dsp(object):
 
             bytestream = tone_out.tobytes()
             pya = pyaudio.PyAudio()
-            stream = pya.open(format=pya.get_format_from_width(width=2), channels=1, rate=OUTPUT_SAMPLE_RATE, output=True)
+            stream = pya.open(format=pya.get_format_from_width(width=2), channels=1, rate=SAMPLE_RATE, output=True)
             stream.write(bytestream)
             stream.stop_stream()
             stream.close()
@@ -163,5 +161,5 @@ class Dsp(object):
             pya.terminate()
             print("* Preview completed!")
         else:
-            write(filename, OUTPUT_SAMPLE_RATE, tone_out)
+            writewav(filename, SAMPLE_RATE, tone_out)
             print("* Wrote audio file!")

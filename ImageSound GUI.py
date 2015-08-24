@@ -52,6 +52,10 @@ class ImageSoundGUI:
         # maximize the window on program open
         # self.root.state('zoomed')
 
+        # Options menu variable
+        self.SRselect = StringVar()
+        self.SRselect.set(1)
+
         # main menu
         main_menu = Menu(self.root)
         menu_file = Menu(main_menu, tearoff=0)
@@ -80,12 +84,21 @@ class ImageSoundGUI:
                               accelerator='Alt+F4',
                               command=self.root.quit,
                               underline=1)
+        menu_options = Menu(main_menu, tearoff=0)
+        menu_options.add_command(label='Sample Rate:', state=DISABLED)
+        menu_options.add_radiobutton(label='44.1 kHz', value=1, command=self.ChangeSR, variable=self.SRselect)
+        menu_options.add_radiobutton(label='48 kHz', value=2, command=self.ChangeSR, variable=self.SRselect)
+        menu_options.add_radiobutton(label='88.2 kHz', value=3, command=self.ChangeSR, variable=self.SRselect)
+        menu_options.add_radiobutton(label='96 kHz', value=4, command=self.ChangeSR, variable=self.SRselect)
+        menu_options.add_radiobutton(label='176.4 kHz', value=5, command=self.ChangeSR, variable=self.SRselect)
+        menu_options.add_radiobutton(label='192 kHz', value=6, command=self.ChangeSR, variable=self.SRselect)
         menu_help = Menu(main_menu, tearoff=0)
         menu_help.add_command(label='About...',
                               accelerator='F12',
                               underline=0,
                               command=self.About)
         main_menu.add_cascade(label='File', underline=0, menu=menu_file)
+        main_menu.add_cascade(label='Options', underline=0, menu=menu_options)
         main_menu.add_cascade(label='Help', underline=0, menu=menu_help)
         self.root.config(menu=main_menu)
 
@@ -190,6 +203,22 @@ class ImageSoundGUI:
 
         # create DSP object
         self.dsp = DSP.Dsp(gui=self)
+        self.SRselect.set(1)
+
+    def ChangeSR(self, event=None):
+        sel_value = self.SRselect.get()
+        if sel_value == '1':
+            DSP.SAMPLE_RATE = 44100
+        elif sel_value == '2':
+            DSP.SAMPLE_RATE = 48000
+        elif sel_value == '3':
+            DSP.SAMPLE_RATE = 88200
+        elif sel_value == '4':
+            DSP.SAMPLE_RATE = 96000
+        elif sel_value == '5':
+            DSP.SAMPLE_RATE = 174200
+        elif sel_value == '6':
+            DSP.SAMPLE_RATE = 192000
 
     def ResizeCanvas(self, event):
         if self.is_img_loaded == 0:
@@ -206,6 +235,7 @@ class ImageSoundGUI:
             self.seg.clear()
             for i in range(self.NUM_TABS):
                 self.viewport.delete('line' + str(i))
+                self.viewport.delete('mid' + str(i))
 
     def StartLineOrLoadPic(self, event):
         if self.is_img_loaded != 0:
@@ -221,6 +251,7 @@ class ImageSoundGUI:
                 self.btn_render.config(state=NORMAL)
             if self.objectId != 0:
                 event.widget.delete('line' + str(self.current_tab))
+                event.widget.delete('mid' + str(self.current_tab))
             viewport = event.widget
             if self.drawn:
                 viewport.delete(self.drawn)
@@ -242,7 +273,9 @@ class ImageSoundGUI:
                 objectId = self.viewport.create_line(self.start.x, self.start.y, currentx, currenty,
                                                      width=self.harm_count[self.current_tab].get(),
                                                      fill=self.COLORS[self.current_tab],
-                                                     stipple='gray75', tag='line' + str(self.current_tab))
+                                                     stipple='gray50', tag='line' + str(self.current_tab))
+                midline = self.viewport.create_line(self.start.x, self.start.y, currentx, currenty,
+                                                     width=1, fill=self.COLORS[self.current_tab], tag='mid' + str(self.current_tab))
                 length = int(np.hypot(currenty-self.start.y, currentx-self.start.x))
                 x, y = np.linspace(self.start.x - 4, currentx - 4, length), np.linspace(self.start.y - 4, currenty - 4, length)
                 self.seg[self.current_tab] = self.imag[x.astype(np.int), y.astype(np.int)]
@@ -281,14 +314,15 @@ class ImageSoundGUI:
             self.viewport.config(width=im.size[0] + 4, height=im.size[1] + 4)
             self.imgsize = (int(self.viewport.cget('width')) - 1,int(self.viewport.cget('height')) - 1)
             self.is_img_loaded = im_tk
-            sprite = self.viewport.create_image((4, 4), anchor=NW, image=im_tk, tag='image')
+            self.viewport.create_image((4, 4), anchor=NW, image=im_tk, tag='image')
+            self.viewport.delete('openfiletext')
         except:
             print('File not found, or dialog cancelled!')
             #raise
 
     def PreviewAudio(self, event=None):
         if self.btn_preview.cget('state') != DISABLED:
-            self.dsp.render_segments(self.seg, preview=True)
+            self.dsp.render_segments(self.seg, preview=True, filename=None)
 
     def RenderToFile(self, event=None):
         if self.btn_render.cget('state') != DISABLED:
@@ -352,9 +386,9 @@ class ImageSoundGUI:
             for i in range(10):
                 event.widget.invoke('buttondown')
 
-    def ValidateIfNum(self, user_input, new_value, widget_name):
+    def ValidateIfNum(self, new_value, user_input, widget_name):
         # disallow anything but numbers in the input
-        valid = new_value == '' or new_value.isdigit()
+        valid = user_input == '' or user_input.isdigit()
         # now that we've ensured the input is only integers, range checking!
         if valid:
             # get minimum and maximum values of the widget to be validated
@@ -362,7 +396,9 @@ class ImageSoundGUI:
             maxval = int(self.root.nametowidget(widget_name).config('to')[4])
             # make sure that input doesn't have more digits than the maximum value
             # and that it's in min-max range
-            if len(user_input) > len(str(maxval)) or int(user_input) not in range(minval, maxval):
+            if new_value == '':
+                valid = False
+            elif len(new_value) > len(str(maxval)) or int(new_value) not in range(minval, maxval):
                 valid = False
         if not valid:
             self.root.bell()
