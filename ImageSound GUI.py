@@ -235,7 +235,18 @@ class ImageSoundGUI:
             self.seg.clear()
             for i in range(self.NUM_TABS):
                 self.viewport.delete('line' + str(i))
-                self.viewport.delete('mid' + str(i))
+
+    def CustomLine(self, x0, y0, x1, y1, width, color, name, canvas):
+        try:
+            slope = (y1 - y0) / (x1 - x0)
+        except ZeroDivisionError:
+            slope = 1000    # slope is undefined for vertical lines, so just use some positive number > 1 to be able to draw it
+
+        for i in range(width):
+            if -1 <= slope <= 1:
+                obj = canvas.create_line(x0, y0 + i, x1, y1 + i, fill=color, tag=name)
+            else:
+                obj = canvas.create_line(x0 + i, y0, x1 + i, y1, fill=color, tag=name)
 
     def StartLineOrLoadPic(self, event):
         if self.is_img_loaded != 0:
@@ -251,7 +262,6 @@ class ImageSoundGUI:
                 self.btn_render.config(state=NORMAL)
             if self.objectId != 0:
                 event.widget.delete('line' + str(self.current_tab))
-                event.widget.delete('mid' + str(self.current_tab))
             viewport = event.widget
             if self.drawn:
                 viewport.delete(self.drawn)
@@ -270,12 +280,8 @@ class ImageSoundGUI:
                 else:
                     currenty = event.y
                 # draw the vector
-                objectId = self.viewport.create_line(self.start.x, self.start.y, currentx, currenty,
-                                                     width=self.harm_count[self.current_tab].get(),
-                                                     fill=self.COLORS[self.current_tab],
-                                                     stipple='gray50', tag='line' + str(self.current_tab))
-                midline = self.viewport.create_line(self.start.x, self.start.y, currentx, currenty,
-                                                     width=1, fill=self.COLORS[self.current_tab], tag='mid' + str(self.current_tab))
+                objectId = 1
+                self.CustomLine(self.start.x, self.start.y, currentx, currenty, width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
                 length = int(np.hypot(currenty-self.start.y, currentx-self.start.x))
                 x, y = np.linspace(self.start.x - 4, currentx - 4, length), np.linspace(self.start.y - 4, currenty - 4, length)
                 self.seg[self.current_tab] = self.imag[x.astype(np.int), y.astype(np.int)]
@@ -286,7 +292,9 @@ class ImageSoundGUI:
     def AdjustLineWidth(self):
         tag = 'line' + str(self.current_tab)
         if self.viewport.find_withtag(tag):
-            self.viewport.itemconfig(tag,width=self.harm_count[self.current_tab].get())
+            linecoords = self.viewport.coords(tag)
+            self.viewport.delete(tag)
+            self.CustomLine(linecoords[0], linecoords[1], linecoords[2], linecoords[3], width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
 
     def CloseFile(self, event=None):
         self.viewport.delete('image')
