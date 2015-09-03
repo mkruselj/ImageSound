@@ -55,6 +55,8 @@ class ImageSoundGUI:
         # Options menu variable
         self.SRselect = StringVar()
         self.SRselect.set(1)
+        self.Lumselect = StringVar()
+        self.Lumselect.set(1)
 
         # main menu
         main_menu = Menu(self.root)
@@ -92,6 +94,9 @@ class ImageSoundGUI:
         menu_options.add_radiobutton(label='96 kHz', value=4, command=self.ChangeSR, variable=self.SRselect)
         menu_options.add_radiobutton(label='176.4 kHz', value=5, command=self.ChangeSR, variable=self.SRselect)
         menu_options.add_radiobutton(label='192 kHz', value=6, command=self.ChangeSR, variable=self.SRselect)
+        menu_options.add_command(label='Luminosity Formula:', state=DISABLED)
+        menu_options.add_radiobutton(label='ITU-R BT.709', value=1, command=self.ChangeLum, variable=self.Lumselect)
+        menu_options.add_radiobutton(label='Digital CCIR 601', value=2, command=self.ChangeLum, variable=self.Lumselect)
         menu_help = Menu(main_menu, tearoff=0)
         menu_help.add_command(label='About...',
                               accelerator='F12',
@@ -219,6 +224,13 @@ class ImageSoundGUI:
             DSP.SAMPLE_RATE = 174200
         elif sel_value == '6':
             DSP.SAMPLE_RATE = 192000
+
+    def ChangeLum(self, event=None):
+        sel_value = self.Lumselect.get()
+        if sel_value == '1':
+            DSP.LUMINOSITY_MODE = 0
+        elif sel_value == '2':
+            DSP.LUMINOSITY_MODE = 1
 
     def ResizeCanvas(self, event):
         if self.is_img_loaded == 0:
