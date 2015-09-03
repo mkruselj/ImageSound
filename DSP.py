@@ -119,9 +119,10 @@ class Dsp(object):
 
         # generate sine wave
         # Started nesting here
+        sines = list()
         for j, harm in enumerate(harmonics):
             sine = self.note(harm,buffer_length / 1000, amp=MAX_AMPLITUDE / harm_count, rate=SAMPLE_RATE)
-
+            sines.append(sine)
             # get pixel luminosity data
             # this will work for 1d arrays, but not nd arrays
             luminosity_values = []
@@ -138,8 +139,10 @@ class Dsp(object):
         amplitude_buff_space = linspace(0,1,(buffer_length / 1000) * SAMPLE_RATE)
 
         print("  * Applying luminosity values to sine wave amplitudes")
-        waveform = sine * spl(amplitude_buff_space)
-
+        waveforms = list()
+        for sine in sines:
+            waveforms.append(sine * spl(amplitude_buff_space))
+        waveform = sum(waveforms)
         # generate empty buffer for delay time
         dly = self.note(1,delay_buffer_length / 1000, amp=0, rate=SAMPLE_RATE)
 
