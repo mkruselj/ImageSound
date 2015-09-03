@@ -271,11 +271,15 @@ class ImageSoundGUI:
         except ZeroDivisionError:
             slope = 1000    # slope is undefined for vertical lines, so just use some positive number > 1 to be able to draw it
 
+        tmp_list = list()
         for i in range(width):
             if -1 <= slope <= 1:
                 obj = canvas.create_line(x0, y0 + i, x1, y1 + i, fill=color, tag=name)
             else:
                 obj = canvas.create_line(x0 + i, y0, x1 + i, y1, fill=color, tag=name)
+            rr, cc = skline(self.start.y - 4, self.start.x - 4, y1 - 4, x1 - 4)
+            tmp_list.append(self.imag[cc, rr])
+        self.seg[self.current_tab] = tmp_list
 
     def StartLineOrLoadPic(self, event):
         if self.is_img_loaded != 0:
@@ -312,8 +316,7 @@ class ImageSoundGUI:
                 objectId = 1
                 self.CustomLine(self.start.x, self.start.y, currentx, currenty, width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
                 # this should go to CustomLine function
-                rr, cc = skline(self.start.y - 4, self.start.x - 4, currenty - 4, currentx - 4)
-                self.seg[self.current_tab] = self.imag[cc, rr]
+                
                 self.drawn = objectId
             except:
                 raise
@@ -376,7 +379,7 @@ class ImageSoundGUI:
     def About(self, event=None):
         aboutscreen = Toplevel()
         aboutscreen.title('About ImageSound')
-        info = Label(aboutscreen, text='Programmed by Mario Krušelj\n\n\nMaster\'s Degree Thesis\n\nConverting Digital Image to Sound\nUsing Additive Synthesis\n\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n\n© 2015-20xx', justify='left')
+        info = Label(aboutscreen, text='Programmed by Mario Kruelj\n\n\nMaster\'s Degree Thesis\n\nConverting Digital Image to Sound\nUsing Additive Synthesis\n\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n\n 2015-20xx', justify='left')
         info.grid(padx=10, pady=10, sticky=N)
         pic = ImageTk.PhotoImage(Image.open('mario.png'))
         logo = Label(aboutscreen, image=pic)

@@ -56,6 +56,7 @@ class Dsp(object):
 
     def render_segment(self, seg, key):
         print("  * Vector %d:" % (key + 1))
+        print seg
 
         harm_mode = self.gui.harm_mode_var[key].get()
         harm_count = int(self.gui.harm_count[key].get())
@@ -148,8 +149,9 @@ class Dsp(object):
     def render_segments(self, segs, preview, filename):
         print("* Rendering vectors...")
         buffs = []
+        # .pop in line 154 is temporary and needs to be fixed to play all segments
         for k in segs.keys():
-            buffs.append(self.render_segment(segs[k],k))
+            buffs.append(self.render_segment(segs[k].pop(),k))
         self.sum_buffers(buffs, preview, filename)
 
     def sum_buffers(self, buffs, preview, filename):
