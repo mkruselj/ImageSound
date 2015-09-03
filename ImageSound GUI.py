@@ -316,8 +316,6 @@ class ImageSoundGUI:
                 # draw the vector
                 objectId = 1
                 self.CustomLine(self.start.x - 4, self.start.y - 4, currentx - 4, currenty - 4, width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
-                # this should go to CustomLine function
-
                 self.drawn = objectId
             except:
                 raise
@@ -325,7 +323,7 @@ class ImageSoundGUI:
     def AdjustLineWidth(self):
         tag = 'line' + str(self.current_tab)
         if self.viewport.find_withtag(tag):
-            linecoords = self.viewport.coords(tag)
+            linecoords = int(self.viewport.coords(tag))
             self.viewport.delete(tag)
             self.CustomLine(linecoords[0], linecoords[1], linecoords[2], linecoords[3], width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
 

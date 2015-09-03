@@ -56,7 +56,6 @@ class Dsp(object):
 
     def render_segment(self, seg, key):
         print("  * Vector %d:" % (key + 1))
-        print seg
 
         harm_mode = self.gui.harm_mode_var[key].get()
         harm_count = int(self.gui.harm_count[key].get())
@@ -75,9 +74,6 @@ class Dsp(object):
         # handle harmonics settings
         harmonics = []
         harmonics.append(base_freq)
-
-        # we only can handle first harmonic right now so override anything from interface
-        harm_count = 1
 
         for h in range(1,harm_count):
             if harm_mode == 'All':
@@ -118,13 +114,12 @@ class Dsp(object):
                 harmonics.append(freq)
 
         # generate sine wave
-        # Started nesting here
-        sines = list()
+        waveforms = list()
+
         for j, harm in enumerate(harmonics):
+            print("    * Processing harmonic " + str(j+1))
             sine = self.note(harm,buffer_length / 1000, amp=MAX_AMPLITUDE / harm_count, rate=SAMPLE_RATE)
-            sines.append(sine)
             # get pixel luminosity data
-            # this will work for 1d arrays, but not nd arrays
             luminosity_values = []
             x, y = seg[j].shape
             for i in range(x):
@@ -132,16 +127,14 @@ class Dsp(object):
                 luminosity = sqrt(0.299 * pow(R,2) + 0.587 * pow(G,2) + 0.114 * pow(B,2)) / 255
                 luminosity_values.append(luminosity)
 
-        # now interpolate the values with the amplitude buffer
-        luminosity_x = linspace(0,1,len(luminosity_values))
-        luminosity_values = array(luminosity_values)
-        spl = interpolate(luminosity_x, luminosity_values, k=1, s=0)
-        amplitude_buff_space = linspace(0,1,(buffer_length / 1000) * SAMPLE_RATE)
+            # now interpolate the values with the amplitude buffer
+            luminosity_x = linspace(0,1,len(luminosity_values))
+            luminosity_values = array(luminosity_values)
+            spl = interpolate(luminosity_x, luminosity_values, k=1, s=0)
+            amplitude_buff_space = linspace(0,1,(buffer_length / 1000) * SAMPLE_RATE)
 
-        print("  * Applying luminosity values to sine wave amplitudes")
-        waveforms = list()
-        for sine in sines:
             waveforms.append(sine * spl(amplitude_buff_space))
+
         waveform = sum(waveforms)
         # generate empty buffer for delay time
         dly = self.note(1,delay_buffer_length / 1000, amp=0, rate=SAMPLE_RATE)
