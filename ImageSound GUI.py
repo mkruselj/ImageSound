@@ -275,9 +275,10 @@ class ImageSoundGUI:
         for i in range(width):
             if -1 <= slope <= 1:
                 obj = canvas.create_line(x0, y0 + i, x1, y1 + i, fill=color, tag=name)
+                rr, cc = skline(y0 + i, x0, y1 + i, x1)
             else:
                 obj = canvas.create_line(x0 + i, y0, x1 + i, y1, fill=color, tag=name)
-            rr, cc = skline(y0, x0, y1, x1)
+                rr, cc = skline(y0, x0 + i, y1, x1 + i)
             tmp_list.append(self.imag[cc, rr])
         self.seg[self.current_tab] = tmp_list
 
@@ -314,9 +315,9 @@ class ImageSoundGUI:
                     currenty = event.y
                 # draw the vector
                 objectId = 1
-                self.CustomLine(self.start.x, self.start.y, currentx, currenty, width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
+                self.CustomLine(self.start.x - 4, self.start.y - 4, currentx - 4, currenty - 4, width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
                 # this should go to CustomLine function
-                
+
                 self.drawn = objectId
             except:
                 raise
