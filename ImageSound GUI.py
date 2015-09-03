@@ -277,7 +277,7 @@ class ImageSoundGUI:
                 obj = canvas.create_line(x0, y0 + i, x1, y1 + i, fill=color, tag=name)
             else:
                 obj = canvas.create_line(x0 + i, y0, x1 + i, y1, fill=color, tag=name)
-            rr, cc = skline(self.start.y - 4, self.start.x - 4, y1 - 4, x1 - 4)
+            rr, cc = skline(y0, x0, y1, x1)
             tmp_list.append(self.imag[cc, rr])
         self.seg[self.current_tab] = tmp_list
 
