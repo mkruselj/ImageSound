@@ -1,11 +1,11 @@
 from numpy import linspace,sin,pi,int16,array,append,arange,multiply
 from scipy.io.wavfile import write as writewav
 from scipy.interpolate import UnivariateSpline as interpolate
+from math import sqrt
 import pyaudio
 
 MAX_AMPLITUDE = 32767
 SAMPLE_RATE = 44100
-LUMINOSITY_MODE = 0
 
 class Dsp(object):
 
@@ -125,15 +125,12 @@ class Dsp(object):
         x, y = seg.shape
         for i in range(x):
             R, G, B = int(seg[i,0]), int(seg[i,1]), int(seg[i,2])
-            if LUMINOSITY_MODE == 0:
-                luminosity = (0.2126 * R + 0.7152 * G + 0.0722 * B) / 255
-            else:
-                luminosity = (0.299 * R + 0.587 * G + 0.114 * B) / 255
+            luminosity = sqrt(0.299 * pow(R,2) + 0.587 * pow(G,2) + 0.114 * pow(B,2)) / 255
             luminosity_values.append(luminosity)
 
         # now interpolate the values with the amplitude buffer
-        luminosity_values = array(luminosity_values)
         luminosity_x = linspace(0,1,len(luminosity_values))
+        luminosity_values = array(luminosity_values)
         spl = interpolate(luminosity_x, luminosity_values, k=1, s=0)
         amplitude_buff_space = linspace(0,1,(buffer_length / 1000) * SAMPLE_RATE)
 

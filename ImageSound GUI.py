@@ -1,13 +1,15 @@
 try:
     from Tkinter import *
+    import tkMessageBox as messagebox
     import tkFileDialog as filedialog
     import ttk
 except ImportError:
     from tkinter import *
-    from tkinter import filedialog, ttk
+    from tkinter import filedialog, ttk, messagebox
 from PIL import Image, ImageTk
 import numpy as np
 from scipy import misc
+from skimage.draw import line as skline
 import time
 import sys
 import DSP
@@ -47,16 +49,11 @@ class ImageSoundGUI:
         self.h = self.wh * 0.75
         self.x = (self.ws / 2) - (self.w / 2)
         self.y = (self.wh / 2) - (self.h / 2)
-        self.root.geometry('800x600+%d+%d' % (self.x-25, self.y))
-
-        # maximize the window on program open
-        # self.root.state('zoomed')
+        self.root.geometry('800x600+%d+%d' % (self.x-40, self.y))
 
         # Options menu variable
         self.SRselect = StringVar()
-        self.SRselect.set(1)
-        self.Lumselect = StringVar()
-        self.Lumselect.set(1)
+        self.ImPreview = StringVar()
 
         # main menu
         main_menu = Menu(self.root)
@@ -84,7 +81,7 @@ class ImageSoundGUI:
         menu_file.add_separator()
         menu_file.add_command(label='Exit',
                               accelerator='Alt+F4',
-                              command=self.root.quit,
+                              command=self.OnProgramQuit,
                               underline=1)
         menu_options = Menu(main_menu, tearoff=0)
         menu_options.add_command(label='Sample Rate:', state=DISABLED)
@@ -94,9 +91,9 @@ class ImageSoundGUI:
         menu_options.add_radiobutton(label='96 kHz', value=4, command=self.ChangeSR, variable=self.SRselect)
         menu_options.add_radiobutton(label='176.4 kHz', value=5, command=self.ChangeSR, variable=self.SRselect)
         menu_options.add_radiobutton(label='192 kHz', value=6, command=self.ChangeSR, variable=self.SRselect)
-        menu_options.add_command(label='Luminosity Formula:', state=DISABLED)
-        menu_options.add_radiobutton(label='ITU-R BT.709', value=1, command=self.ChangeLum, variable=self.Lumselect)
-        menu_options.add_radiobutton(label='Digital CCIR 601', value=2, command=self.ChangeLum, variable=self.Lumselect)
+        menu_options.add_command(label='Image Preview:', state=DISABLED)
+        menu_options.add_radiobutton(label='Original', value=1, command=self.ImPreviewMode, variable=self.ImPreview)
+        menu_options.add_radiobutton(label='Luminance', value=2, command=self.ImPreviewMode, variable=self.ImPreview)
         menu_help = Menu(main_menu, tearoff=0)
         menu_help.add_command(label='About...',
                               accelerator='F12',
@@ -201,6 +198,9 @@ class ImageSoundGUI:
         self.root.bind('<Control-l>', self.ClearAllLines)
         self.root.bind('<F12>', self.About)
 
+        # protocol for exiting the program
+        self.root.protocol('WM_DELETE_WINDOW',self.OnProgramQuit)
+
         # bind mouse actions for the canvas
         self.viewport.bind('<Button-1>', self.StartLineOrLoadPic)
         self.viewport.bind('<B1-Motion>', self.GrowLine)
@@ -208,7 +208,21 @@ class ImageSoundGUI:
 
         # create DSP object
         self.dsp = DSP.Dsp(gui=self)
-        self.SRselect.set(1)
+
+        # loading values for options from the INI file
+        try:
+            optionsfile = open('ImageSound.ini','r')
+            print('\"ImageSound.ini\" found - loading options!')
+            sr  = optionsfile.readline()
+            imp = optionsfile.readline()
+            self.SRselect.set(sr[12])
+            self.ImPreview.set(imp[12])
+            optionsfile.close()
+        except IOError:
+            print('\"ImageSound.ini\" doesn\'t exist - reverting to default options!')
+            self.SRselect.set(1)
+            self.ImPreview.set(1)
+        self.ChangeSR()
 
     def ChangeSR(self, event=None):
         sel_value = self.SRselect.get()
@@ -225,12 +239,15 @@ class ImageSoundGUI:
         elif sel_value == '6':
             DSP.SAMPLE_RATE = 192000
 
-    def ChangeLum(self, event=None):
-        sel_value = self.Lumselect.get()
-        if sel_value == '1':
-            DSP.LUMINOSITY_MODE = 0
-        elif sel_value == '2':
-            DSP.LUMINOSITY_MODE = 1
+    def ImPreviewMode(self, event=None):
+        if self.is_img_loaded != 0:
+            sel_value = self.ImPreview.get()
+            self.viewport.delete('image')
+            if sel_value == '1':
+                self.viewport.create_image((4, 4), anchor=NW, image=im_tk, tag='image')
+            else:
+                self.viewport.create_image((4, 4), anchor=NW, image=im_lum_tk, tag='image')
+            self.viewport.tag_lower('image')
 
     def ResizeCanvas(self, event):
         if self.is_img_loaded == 0:
@@ -294,9 +311,9 @@ class ImageSoundGUI:
                 # draw the vector
                 objectId = 1
                 self.CustomLine(self.start.x, self.start.y, currentx, currenty, width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
-                length = int(np.hypot(currenty-self.start.y, currentx-self.start.x))
-                x, y = np.linspace(self.start.x - 4, currentx - 4, length), np.linspace(self.start.y - 4, currenty - 4, length)
-                self.seg[self.current_tab] = self.imag[x.astype(np.int), y.astype(np.int)]
+                # this should go to CustomLine function
+                rr, cc = skline(self.start.y - 4, self.start.x - 4, currenty - 4, currentx - 4)
+                self.seg[self.current_tab] = self.imag[cc, rr]
                 self.drawn = objectId
             except:
                 raise
@@ -319,6 +336,7 @@ class ImageSoundGUI:
         try:
             # keeps the reference to loaded image in this variable
             global im_tk
+            global im_lum_tk
             imgfile = filedialog.askopenfilename(title='Open Image',
                                                  filetypes=[('All supported files', '.bmp .jpg .jpeg .png'),
                                                             ('Bitmap files', '.bmp'),
@@ -326,19 +344,22 @@ class ImageSoundGUI:
                                                             ('PNG files', '.png')])
             im = Image.open(imgfile)
             im_tk = ImageTk.PhotoImage(im)
+            im_lum = im.convert('L')
+            im_lum_tk = ImageTk.PhotoImage(im_lum)
             self.imag = np.array(im)
             self.imag = self.imag.swapaxes(1,0) # swap first two axes, numpy goes Y then X for some reason when importing image
             self.dsp.set_img(self.imag)
+            # show the image
             self.ClearAllLines()
             self.viewport.grid(sticky=N+W)
             self.viewport.config(width=im.size[0] + 4, height=im.size[1] + 4)
             self.imgsize = (int(self.viewport.cget('width')) - 1,int(self.viewport.cget('height')) - 1)
             self.is_img_loaded = im_tk
-            self.viewport.create_image((4, 4), anchor=NW, image=im_tk, tag='image')
+            self.ImPreviewMode()
             self.viewport.delete('openfiletext')
         except:
             print('File not found, or dialog cancelled!')
-            #raise
+            raise
 
     def PreviewAudio(self, event=None):
         if self.btn_preview.cget('state') != DISABLED:
@@ -389,6 +410,14 @@ class ImageSoundGUI:
 
     def GetCurrentTab(self, event):
         self.current_tab = event.widget.index('current')
+
+    def OnProgramQuit(self):
+        if messagebox.askokcancel('Quit?','Do you really want to quit ImageSound?'):
+            ini = open('ImageSound.ini','w+')
+            ini.write('sample_rate=' + self.SRselect.get() + '\n')
+            ini.write('img_preview=' + self.ImPreview.get() + '\n')
+            ini.close()
+            self.root.destroy()
 
     def OnMouseWheel(self, event):
         # check if the user scrolls up (positive) or down (negative)
