@@ -56,6 +56,7 @@ class Dsp(object):
 
     def render_segment(self, seg, key):
         print("  * Vector %d:" % (key + 1))
+        print seg
 
         harm_mode = self.gui.harm_mode_var[key].get()
         harm_count = int(self.gui.harm_count[key].get())
@@ -117,16 +118,18 @@ class Dsp(object):
                 harmonics.append(freq)
 
         # generate sine wave
-        sine = self.note(base_freq,buffer_length / 1000, amp=MAX_AMPLITUDE / harm_count, rate=SAMPLE_RATE)
+        # Started nesting here
+        for j, harm in enumerate(harmonics):
+            sine = self.note(harm,buffer_length / 1000, amp=MAX_AMPLITUDE / harm_count, rate=SAMPLE_RATE)
 
-        # get pixel luminosity data
-        # this will work for 1d arrays, but not nd arrays
-        luminosity_values = []
-        x, y = seg.shape
-        for i in range(x):
-            R, G, B = int(seg[i,0]), int(seg[i,1]), int(seg[i,2])
-            luminosity = sqrt(0.299 * pow(R,2) + 0.587 * pow(G,2) + 0.114 * pow(B,2)) / 255
-            luminosity_values.append(luminosity)
+            # get pixel luminosity data
+            # this will work for 1d arrays, but not nd arrays
+            luminosity_values = []
+            x, y = seg[j].shape
+            for i in range(x):
+                R, G, B = int(seg[j][i,0]), int(seg[j][i,1]), int(seg[j][i,2])
+                luminosity = sqrt(0.299 * pow(R,2) + 0.587 * pow(G,2) + 0.114 * pow(B,2)) / 255
+                luminosity_values.append(luminosity)
 
         # now interpolate the values with the amplitude buffer
         luminosity_x = linspace(0,1,len(luminosity_values))
@@ -148,8 +151,9 @@ class Dsp(object):
     def render_segments(self, segs, preview, filename):
         print("* Rendering vectors...")
         buffs = []
+        # .pop in line 154 is temporary and needs to be fixed to play all segments
         for k in segs.keys():
-            buffs.append(self.render_segment(segs[k],k))
+            buffs.append(self.render_segment(segs[k], k))
         self.sum_buffers(buffs, preview, filename)
 
     def sum_buffers(self, buffs, preview, filename):

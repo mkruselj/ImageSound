@@ -58,3 +58,6 @@ target/
 
 # wav files
 *.wav
+
+# ini files
+*.ini
