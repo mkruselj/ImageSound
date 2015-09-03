@@ -6,6 +6,7 @@ import pyaudio
 
 MAX_AMPLITUDE = 32767
 SAMPLE_RATE = 44100
+ANTIALIASING = 1
 
 class Dsp(object):
 
@@ -15,8 +16,7 @@ class Dsp(object):
         self.midi_notes = self.generate_midi_dict()
 
         # helper stuff
-        self.odds = [x for x in range(128) if x % 2]
-        self.evens = [x for x in range(128) if not x % 2]
+        self.odds = [x for x in range(256) if x % 2]
 
     def set_img(self, img):
         self.img = img
@@ -30,7 +30,7 @@ class Dsp(object):
         return midi
 
     def generate_sample(self, ob, preview, filename):
-        print("* Generating sample...")
+        print("* Generating audio...")
         tone_out = array(ob, dtype=int16)
 
         if preview:
@@ -64,13 +64,6 @@ class Dsp(object):
         buffer_length = int(self.gui.read_speed[key].get())
         delay_buffer_length = int(self.gui.delay_time[key].get())
 
-        print("    * Harmonic Mode: %s" % harm_mode)
-        print("    * Harmonic Count: %s" % harm_count)
-        print("    * MIDI Note: %s" % midi_note_number)
-        print("    * Base Frequency: %s Hz" % base_freq)
-        print("    * Buffer length: %s ms" % buffer_length)
-        print("    * Delay time: %s ms" % delay_buffer_length)
-
         # handle harmonics settings
         harmonics = []
         harmonics.append(base_freq)
@@ -83,16 +76,16 @@ class Dsp(object):
                 freq = base_freq * (h * 2)
                 harmonics.append(freq)
             elif harm_mode == 'Odd':
-                freq = base_freq * ((h * 2) + 1)
-                harmonics.append(freq)
-            elif harm_mode == 'Skip 2':
                 freq = base_freq * self.odds[h]
                 harmonics.append(freq)
-            elif harm_mode == 'Skip 3':
+            elif harm_mode == 'Skip 2':
                 freq = base_freq * (self.odds[h] + h)
                 harmonics.append(freq)
-            elif harm_mode == 'Skip 4':
+            elif harm_mode == 'Skip 3':
                 freq = base_freq * (self.odds[h] + h + h)
+                harmonics.append(freq)
+            elif harm_mode == 'Skip 4':
+                freq = base_freq * (self.odds[h] + h + h + h)
                 harmonics.append(freq)
             elif harm_mode == 'Sub All':
                 freq = base_freq / h
@@ -101,23 +94,27 @@ class Dsp(object):
                 freq = base_freq / (h * 2)
                 harmonics.append(freq)
             elif harm_mode == 'Sub Odd':
-                freq = base_freq / ((h * 2) + 1)
-                harmonics.append(freq)
-            elif harm_mode == 'Sub Skip 2':
                 freq = base_freq / self.odds[h]
                 harmonics.append(freq)
-            elif harm_mode == 'Sub Skip 3':
+            elif harm_mode == 'Sub Skip 2':
                 freq = base_freq / (self.odds[h] + h)
                 harmonics.append(freq)
-            elif harm_mode == 'Sub Skip 4':
+            elif harm_mode == 'Sub Skip 3':
                 freq = base_freq / (self.odds[h] + h + h)
                 harmonics.append(freq)
+            elif harm_mode == 'Sub Skip 4':
+                freq = base_freq / (self.odds[h] + h + h + h)
+                harmonics.append(freq)
 
-        # generate sine wave
+        # list with all the harmonics to be generated
         waveforms = list()
 
+        # generate sine waves
         for j, harm in enumerate(harmonics):
-            print("    * Processing harmonic " + str(j+1))
+            # check if harmonic goes beyond Nyquist and stop processing, if antialiasing enabled
+            if harm > SAMPLE_RATE / 2 and ANTIALIASING == 1:
+                break
+            print("    * Processing harmonic #" + str(j+1) + ', ' + str(harm) + ' Hz')
             sine = self.note(harm,buffer_length / 1000, amp=MAX_AMPLITUDE / harm_count, rate=SAMPLE_RATE)
             # get pixel luminosity data
             luminosity_values = []

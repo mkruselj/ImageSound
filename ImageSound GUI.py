@@ -54,6 +54,7 @@ class ImageSoundGUI:
         # Options menu variable
         self.SRselect = StringVar()
         self.ImPreview = StringVar()
+        self.AntiAlias = StringVar()
 
         # main menu
         main_menu = Menu(self.root)
@@ -94,6 +95,9 @@ class ImageSoundGUI:
         menu_options.add_command(label='Image Preview:', state=DISABLED)
         menu_options.add_radiobutton(label='Original', value=1, command=self.ImPreviewMode, variable=self.ImPreview)
         menu_options.add_radiobutton(label='Luminance', value=2, command=self.ImPreviewMode, variable=self.ImPreview)
+        menu_options.add_command(label='Antialiasing:', state=DISABLED)
+        menu_options.add_radiobutton(label='Disabled', value=1, command=self.AAMode, variable=self.AntiAlias)
+        menu_options.add_radiobutton(label='Enabled', value=2, command=self.AAMode, variable=self.AntiAlias)
         menu_help = Menu(main_menu, tearoff=0)
         menu_help.add_command(label='About...',
                               accelerator='F12',
@@ -215,14 +219,18 @@ class ImageSoundGUI:
             print('\"ImageSound.ini\" found - loading options!')
             sr  = optionsfile.readline()
             imp = optionsfile.readline()
+            aa  = optionsfile.readline()
             self.SRselect.set(sr[12])
             self.ImPreview.set(imp[12])
+            self.AntiAlias.set(aa[13])
             optionsfile.close()
         except IOError:
             print('\"ImageSound.ini\" doesn\'t exist - reverting to default options!')
             self.SRselect.set(1)
             self.ImPreview.set(1)
+            self.AntiAlias.set(1)
         self.ChangeSR()
+        self.AAMode()
 
     def ChangeSR(self, event=None):
         sel_value = self.SRselect.get()
@@ -238,6 +246,13 @@ class ImageSoundGUI:
             DSP.SAMPLE_RATE = 174200
         elif sel_value == '6':
             DSP.SAMPLE_RATE = 192000
+
+    def AAMode(self, event=None):
+        sel_value = self.AntiAlias.get()
+        if sel_value == '1':
+            DSP.ANTIALIASING = 0
+        elif sel_value == '2':
+            DSP.ANTIALIASING = 1
 
     def ImPreviewMode(self, event=None):
         if self.is_img_loaded != 0:
@@ -275,11 +290,14 @@ class ImageSoundGUI:
         for i in range(width):
             if -1 <= slope <= 1:
                 obj = canvas.create_line(x0, y0 + i, x1, y1 + i, fill=color, tag=name)
-                rr, cc = skline(y0 + i, x0, y1 + i, x1)
+                rr, cc = skline(y0 + i - 4, x0 - 4, y1 + i - 4, x1 - 4)
             else:
                 obj = canvas.create_line(x0 + i, y0, x1 + i, y1, fill=color, tag=name)
-                rr, cc = skline(y0, x0 + i, y1, x1 + i)
-            tmp_list.append(self.imag[cc, rr])
+                rr, cc = skline(y0 - 4, x0 + i - 4, y1 - 4, x1 + i - 4)
+            try:
+                tmp_list.append(self.imag[cc, rr])
+            except:
+                pass
         self.seg[self.current_tab] = tmp_list
 
     def StartLineOrLoadPic(self, event):
@@ -315,7 +333,7 @@ class ImageSoundGUI:
                     currenty = event.y
                 # draw the vector
                 objectId = 1
-                self.CustomLine(self.start.x - 4, self.start.y - 4, currentx - 4, currenty - 4, width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
+                self.CustomLine(self.start.x, self.start.y, currentx, currenty, width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
                 self.drawn = objectId
             except:
                 raise
@@ -323,9 +341,9 @@ class ImageSoundGUI:
     def AdjustLineWidth(self):
         tag = 'line' + str(self.current_tab)
         if self.viewport.find_withtag(tag):
-            linecoords = int(self.viewport.coords(tag))
+            linecoords = self.viewport.coords(tag)
             self.viewport.delete(tag)
-            self.CustomLine(linecoords[0], linecoords[1], linecoords[2], linecoords[3], width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
+            self.CustomLine(int(linecoords[0]), int(linecoords[1]), int(linecoords[2]), int(linecoords[3]), width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
 
     def CloseFile(self, event=None):
         self.viewport.delete('image')
@@ -418,6 +436,7 @@ class ImageSoundGUI:
             ini = open('ImageSound.ini','w+')
             ini.write('sample_rate=' + self.SRselect.get() + '\n')
             ini.write('img_preview=' + self.ImPreview.get() + '\n')
+            ini.write('antialiasing=' + self.AntiAlias.get() + '\n')
             ini.close()
             self.root.destroy()
 
