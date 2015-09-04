@@ -1,17 +1,11 @@
-try:
-    from Tkinter import *
-    import tkMessageBox as messagebox
-    import tkFileDialog as filedialog
-    import ttk
-except ImportError:
-    from tkinter import *
-    from tkinter import filedialog, ttk, messagebox
+#!/usr/bin/env python3
+
+from tkinter import *
+from tkinter import filedialog, ttk, messagebox
 from PIL import Image, ImageTk
-import numpy as np
-from scipy import misc
-from skimage.draw import line as skline
+from numpy import array
+import skimage.draw
 import time
-import sys
 import DSP
 
 
@@ -24,6 +18,7 @@ class ImageSoundGUI:
                 'Sub Even', 'Sub Odd', 'Sub Skip 2', 'Sub Skip 3', 'Sub Skip 4']
     labels = []  # tkinter widget IDs for all labels
     harm_count = []  # tkinter widget IDs for all Harmonics Count spinboxes
+    harm_count_val = []  # tkinter widget actual value for all Harmonics Count spinboxes
     baseline_freq = []  # tkinter widget IDs for all Baseline spinboxes
     delay_time = []  # tkinter widget IDs for all Delay Time spinboxes
     read_speed = []  # tkinter widget IDs for all Read Speed spinboxes
@@ -139,6 +134,7 @@ class ImageSoundGUI:
             self.harm_count[i].bind('<Control-c>', lambda e: 'break')
             self.harm_count[i].bind('<Control-v>', lambda e: 'break')
             self.harm_count[i].bind('<Control-x>', lambda e: 'break')
+            self.harm_count_val.append(int(self.harm_count[i].get()))
             label = Label(frame, text='Baseline (MIDI Note):')
             label.grid(padx=10, pady=5, row=0, column=2, sticky=E)
             self.labels += [label]
@@ -290,14 +286,16 @@ class ImageSoundGUI:
         for i in range(width):
             if -1 <= slope <= 1:
                 obj = canvas.create_line(x0, y0 + i, x1, y1 + i, fill=color, tag=name)
-                rr, cc = skline(y0 + i - 4, x0 - 4, y1 + i - 4, x1 - 4)
+                rr, cc = skimage.draw.line(y0 + i - 4, x0 - 4, y1 + i - 4, x1 - 4)
             else:
                 obj = canvas.create_line(x0 + i, y0, x1 + i, y1, fill=color, tag=name)
-                rr, cc = skline(y0 - 4, x0 + i - 4, y1 - 4, x1 + i - 4)
+                rr, cc = skimage.draw.line(y0 - 4, x0 + i - 4, y1 - 4, x1 + i - 4)
             try:
                 tmp_list.append(self.imag[cc, rr])
+                self.harm_count_val[self.current_tab] = int(self.harm_count[self.current_tab].get())
             except:
-                pass
+                self.harm_count_val[self.current_tab] = i
+                break
         self.seg[self.current_tab] = tmp_list
 
     def StartLineOrLoadPic(self, event):
@@ -344,6 +342,7 @@ class ImageSoundGUI:
             linecoords = self.viewport.coords(tag)
             self.viewport.delete(tag)
             self.CustomLine(int(linecoords[0]), int(linecoords[1]), int(linecoords[2]), int(linecoords[3]), width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
+            self.harm_count_val[self.current_tab] = int(self.harm_count[self.current_tab].get())
 
     def CloseFile(self, event=None):
         self.viewport.delete('image')
@@ -366,7 +365,7 @@ class ImageSoundGUI:
             im_tk = ImageTk.PhotoImage(im)
             im_lum = im.convert('L')
             im_lum_tk = ImageTk.PhotoImage(im_lum)
-            self.imag = np.array(im)
+            self.imag = array(im)
             self.imag = self.imag.swapaxes(1,0) # swap first two axes, numpy goes Y then X for some reason when importing image
             self.dsp.set_img(self.imag)
             # show the image
@@ -378,8 +377,7 @@ class ImageSoundGUI:
             self.ImPreviewMode()
             self.viewport.delete('openfiletext')
         except:
-            print('File not found, or dialog cancelled!')
-            raise
+            pass
 
     def PreviewAudio(self, event=None):
         if self.btn_preview.cget('state') != DISABLED:
@@ -396,9 +394,9 @@ class ImageSoundGUI:
     def About(self, event=None):
         aboutscreen = Toplevel()
         aboutscreen.title('About ImageSound')
-        info = Label(aboutscreen, text='Programmed by Mario Kruelj\n\n\nMaster\'s Degree Thesis\n\nConverting Digital Image to Sound\nUsing Additive Synthesis\n\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n\n 2015-20xx', justify='left')
+        info = Label(aboutscreen, text='Programmed by Mario Krušelj\n\n\nMaster\'s Degree Thesis\n\nConverting Digital Image to Sound\nUsing Additive Synthesis\n\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n\n © 2015-20xx', justify='left')
         info.grid(padx=10, pady=10, sticky=N)
-        pic = ImageTk.PhotoImage(Image.open('mario.png'))
+        pic = ImageTk.PhotoImage(Image.open('images/author.png'))
         logo = Label(aboutscreen, image=pic)
         logo.grid(row=0, column=1, padx=10, pady=10)
         closeabout = Button(aboutscreen, text='Close', padx=5, pady=5, command=aboutscreen.destroy)
@@ -418,7 +416,7 @@ class ImageSoundGUI:
         size = tuple(int(_) for _ in wnd.geometry().split('+')[0].split('x'))
         x = w/2 - size[0]/2
         y = h/2 - size[1]/2
-        wnd.geometry("%dx%d+%d+%d" % (size + (x, y)))
+        wnd.geometry("%dx%d+%d+%d" % (size + (x, y - 50)))
         wnd.resizable(width=False, height=False)
         # now we can show it, nicely centered
         wnd.attributes('-alpha', 1.0)

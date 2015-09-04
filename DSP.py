@@ -1,4 +1,4 @@
-from numpy import linspace,sin,pi,int16,array,append,arange,multiply
+from numpy import linspace, sin, pi, int16, array, append, multiply
 from scipy.io.wavfile import write as writewav
 from scipy.interpolate import UnivariateSpline as interpolate
 from math import sqrt
@@ -34,7 +34,7 @@ class Dsp(object):
         tone_out = array(ob, dtype=int16)
 
         if preview:
-            print("* Previewing audio file...")
+            print("* Previewing audio...")
 
             bytestream = tone_out.tobytes()
             pya = pyaudio.PyAudio()
@@ -44,10 +44,10 @@ class Dsp(object):
             stream.close()
 
             pya.terminate()
-            print("* Preview completed!")
+            print("* Audio preview completed!")
         else:
             writewav(filename, SAMPLE_RATE, tone_out)
-            print("* Wrote audio file!")
+            print("* Wrote audio to file!")
 
     def note(self, freq, len, amp=1, rate=SAMPLE_RATE):
         t = linspace(0,len,len * rate)
@@ -58,7 +58,7 @@ class Dsp(object):
         print("  * Vector %d:" % (key + 1))
 
         harm_mode = self.gui.harm_mode_var[key].get()
-        harm_count = int(self.gui.harm_count[key].get())
+        harm_count = self.gui.harm_count_val[key]
         midi_note_number = int(self.gui.baseline_freq[key].get())
         base_freq = self.midi_notes[midi_note_number]
         buffer_length = int(self.gui.read_speed[key].get())
@@ -68,7 +68,7 @@ class Dsp(object):
         harmonics = []
         harmonics.append(base_freq)
 
-        for h in range(1,harm_count):
+        for h in range(2,harm_count):
             if harm_mode == 'All':
                 freq = base_freq * h
                 harmonics.append(freq)
@@ -133,6 +133,7 @@ class Dsp(object):
             waveforms.append(sine * spl(amplitude_buff_space))
 
         waveform = sum(waveforms)
+
         # generate empty buffer for delay time
         dly = self.note(1,delay_buffer_length / 1000, amp=0, rate=SAMPLE_RATE)
 
@@ -144,7 +145,6 @@ class Dsp(object):
     def render_segments(self, segs, preview, filename):
         print("* Rendering vectors...")
         buffs = []
-        # .pop in line 154 is temporary and needs to be fixed to play all segments
         for k in segs.keys():
             buffs.append(self.render_segment(segs[k], k))
         self.sum_buffers(buffs, preview, filename)
