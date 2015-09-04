@@ -396,7 +396,7 @@ class ImageSoundGUI:
         aboutscreen.title('About ImageSound')
         info = Label(aboutscreen, text='Programmed by Mario Krušelj\n\n\nMaster\'s Degree Thesis\n\nConverting Digital Image to Sound\nUsing Additive Synthesis\n\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n\n © 2015-20xx', justify='left')
         info.grid(padx=10, pady=10, sticky=N)
-        pic = ImageTk.PhotoImage(Image.open('mario.png'))
+        pic = ImageTk.PhotoImage(Image.open('images/author.png'))
         logo = Label(aboutscreen, image=pic)
         logo.grid(row=0, column=1, padx=10, pady=10)
         closeabout = Button(aboutscreen, text='Close', padx=5, pady=5, command=aboutscreen.destroy)
