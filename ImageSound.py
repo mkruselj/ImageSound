@@ -5,9 +5,7 @@ from tkinter import filedialog, ttk, messagebox
 from PIL import Image, ImageTk
 from numpy import array
 from inspect import getsourcefile
-from os.path import abspath
 import skimage.draw, time, DSP
-
 
 class ImageSoundGUI:
     NUM_TABS = 16
@@ -434,11 +432,14 @@ class ImageSoundGUI:
 
     def OnProgramQuit(self):
         if messagebox.askokcancel('Quit?','Do you really want to quit ImageSound?'):
-            ini = open('ImageSound.ini','w+')
-            ini.write('sample_rate=' + self.SRselect.get() + '\n')
-            ini.write('img_preview=' + self.ImPreview.get() + '\n')
-            ini.write('antialiasing=' + self.AntiAlias.get() + '\n')
-            ini.close()
+            try:
+                ini = open('ImageSound.ini','w+')
+                ini.write('sample_rate=' + self.SRselect.get() + '\n')
+                ini.write('img_preview=' + self.ImPreview.get() + '\n')
+                ini.write('antialiasing=' + self.AntiAlias.get() + '\n')
+                ini.close()
+            except:
+                pass
             self.root.destroy()
 
     def OnMouseWheel(self, event):
