@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from numpy import linspace, sin, pi, int16, array, append, multiply
 from scipy.io.wavfile import write as writewav
 from scipy.interpolate import UnivariateSpline as interpolate
@@ -19,10 +21,10 @@ class Dsp(object):
         # precompute sequential odd numbers
         self.odds = [x for x in range(256) if x % 2]
         # precompute first 128 prime numbers
-        N = 720     #
+        N = 720    # 128th prime number is 719, this is the top limit
         a = [1] * N
         x = range
-        for i in x(2, 720):
+        for i in x(2, N):
             if a[i]:
                 for j in x(i * i, N, i) : a[j] = 0
         self.primes = [i for i in x(len(a)) if a[i] == 1][2:]
