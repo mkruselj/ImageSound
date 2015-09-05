@@ -2,6 +2,7 @@ from numpy import linspace, sin, pi, int16, array, append, multiply
 from scipy.io.wavfile import write as writewav
 from scipy.interpolate import UnivariateSpline as interpolate
 from math import sqrt
+import random
 import pyaudio
 
 MAX_AMPLITUDE = 32767
@@ -15,7 +16,7 @@ class Dsp(object):
         self.gui = gui
         self.midi_notes = self.generate_midi_dict()
 
-        # helper stuff
+        # precompute sequential odd numbers
         self.odds = [x for x in range(256) if x % 2]
 
     def set_img(self, img):
@@ -67,10 +68,11 @@ class Dsp(object):
         # handle harmonics settings
         harmonics = []
         harmonics.append(base_freq)
+        rndlist = random.sample(range(2,256),128)
 
-        for h in range(2,harm_count):
+        for h in range(1,harm_count):
             if harm_mode == 'All':
-                freq = base_freq * h
+                freq = base_freq * (h + 1)
                 harmonics.append(freq)
             elif harm_mode == 'Even':
                 freq = base_freq * (h * 2)
@@ -88,7 +90,7 @@ class Dsp(object):
                 freq = base_freq * (self.odds[h] + h + h + h)
                 harmonics.append(freq)
             elif harm_mode == 'Sub All':
-                freq = base_freq / h
+                freq = base_freq / (h + 1)
                 harmonics.append(freq)
             elif harm_mode == 'Sub Even':
                 freq = base_freq / (h * 2)
@@ -104,6 +106,21 @@ class Dsp(object):
                 harmonics.append(freq)
             elif harm_mode == 'Sub Skip 4':
                 freq = base_freq / (self.odds[h] + h + h + h)
+                harmonics.append(freq)
+            elif harm_mode == 'Inc 100 Hz':
+                freq = base_freq + (100 * h)
+                harmonics.append(freq)
+            elif harm_mode == 'Inc 250 Hz':
+                freq = base_freq + (250 * h)
+                harmonics.append(freq)
+            elif harm_mode == 'Inc 500 Hz':
+                freq = base_freq + (500 * h)
+                harmonics.append(freq)
+            elif harm_mode == 'Inc 1000 Hz':
+                freq = base_freq + (1000 * h)
+                harmonics.append(freq)
+            elif harm_mode == 'Random':
+                freq = base_freq * rndlist[h]
                 harmonics.append(freq)
 
         # list with all the harmonics to be generated
