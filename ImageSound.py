@@ -4,9 +4,9 @@ from tkinter import *
 from tkinter import filedialog, ttk, messagebox
 from PIL import Image, ImageTk
 from numpy import array
-import skimage.draw
-import time
-import DSP
+from inspect import getsourcefile
+from os.path import abspath
+import skimage.draw, time, DSP
 
 
 class ImageSoundGUI:
@@ -14,8 +14,8 @@ class ImageSoundGUI:
     NUM_PARTIALS = 128
     COLORS = ('#FF0000', '#FF9900', '#FFBB00', '#FFFF00', '#99FF00', '#00FF00', '#00FF99', '#00FFCC',
               '#00CCFF', '#0099FF', '#0000FF', '#9900FF', '#CC00FF', '#FF00FF', '#FF0099', '#FF9999')
-    MODE_OPT = ['All', 'Even', 'Odd', 'Skip 2', 'Skip 3', 'Skip 4', 'Sub All',
-                'Sub Even', 'Sub Odd', 'Sub Skip 2', 'Sub Skip 3', 'Sub Skip 4']
+    MODE_OPT = ['All', 'Even', 'Odd', 'Primes', 'Skip 2', 'Skip 3', 'Skip 4', 'Sub All',
+                'Sub Even', 'Sub Odd', 'Sub Primes', 'Sub Skip 2', 'Sub Skip 3', 'Sub Skip 4', 'Inc 100 Hz', 'Inc 250 Hz', 'Inc 500 Hz', 'Inc 1000 Hz', 'Random', 'Random Hz']
     labels = []  # tkinter widget IDs for all labels
     harm_count = []  # tkinter widget IDs for all Harmonics Count spinboxes
     harm_count_val = []  # tkinter widget actual value for all Harmonics Count spinboxes
@@ -164,7 +164,7 @@ class ImageSoundGUI:
             self.harm_mode_var += [StringVar()]
             self.harm_mode_var[i].set(self.MODE_OPT[0])
             self.harm_mode += [OptionMenu(frame, self.harm_mode_var[i], *self.MODE_OPT)]
-            self.harm_mode[i].config(width=6, justify='left')
+            self.harm_mode[i].config(width=10, justify='left')
             self.harm_mode[i].grid(row=1, column=1, sticky=W)
             label = Label(frame, text='Delay Time (ms):')
             label.grid(padx=10, row=1, column=4, sticky=E)
@@ -209,10 +209,9 @@ class ImageSoundGUI:
         # create DSP object
         self.dsp = DSP.Dsp(gui=self)
 
-        # loading values for options from the INI file
+        # loading values for options from the INI file, or defaults if INI not found
         try:
             optionsfile = open('ImageSound.ini','r')
-            print('\"ImageSound.ini\" found - loading options!')
             sr  = optionsfile.readline()
             imp = optionsfile.readline()
             aa  = optionsfile.readline()
@@ -221,7 +220,6 @@ class ImageSoundGUI:
             self.AntiAlias.set(aa[13])
             optionsfile.close()
         except IOError:
-            print('\"ImageSound.ini\" doesn\'t exist - reverting to default options!')
             self.SRselect.set(1)
             self.ImPreview.set(1)
             self.AntiAlias.set(1)
@@ -396,7 +394,12 @@ class ImageSoundGUI:
         aboutscreen.title('About ImageSound')
         info = Label(aboutscreen, text='Programmed by Mario Krušelj\n\n\nMaster\'s Degree Thesis\n\nConverting Digital Image to Sound\nUsing Additive Synthesis\n\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n\n © 2015-20xx', justify='left')
         info.grid(padx=10, pady=10, sticky=N)
-        pic = ImageTk.PhotoImage(Image.open('images/author.png'))
+        # if the program is loaded from within ImageSound.data folder
+        try:
+            pic = ImageTk.PhotoImage(Image.open('images/author.png'))
+        # if it's not, it's ran via BAT file, fix the path!
+        except:
+            pic = ImageTk.PhotoImage(Image.open('ImageSound.data/images/author.png'))
         logo = Label(aboutscreen, image=pic)
         logo.grid(row=0, column=1, padx=10, pady=10)
         closeabout = Button(aboutscreen, text='Close', padx=5, pady=5, command=aboutscreen.destroy)
