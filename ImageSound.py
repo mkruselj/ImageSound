@@ -5,17 +5,15 @@ from tkinter import filedialog, ttk, messagebox
 from PIL import Image, ImageTk
 from numpy import array
 from inspect import getsourcefile
-from os.path import abspath
 import skimage.draw, time, DSP
-
 
 class ImageSoundGUI:
     NUM_TABS = 16
     NUM_PARTIALS = 128
     COLORS = ('#FF0000', '#FF9900', '#FFBB00', '#FFFF00', '#99FF00', '#00FF00', '#00FF99', '#00FFCC',
               '#00CCFF', '#0099FF', '#0000FF', '#9900FF', '#CC00FF', '#FF00FF', '#FF0099', '#FF9999')
-    MODE_OPT = ['All', 'Even', 'Odd', 'Skip 2', 'Skip 3', 'Skip 4', 'Sub All',
-                'Sub Even', 'Sub Odd', 'Sub Skip 2', 'Sub Skip 3', 'Sub Skip 4', 'Inc 100 Hz', 'Inc 250 Hz', 'Inc 500 Hz', 'Inc 1000 Hz', 'Random']
+    MODE_OPT = ['All', 'Even', 'Odd', 'Skip 2', 'Skip 3', 'Skip 4', 'Primes', 'Sub All',
+                'Sub Even', 'Sub Odd', 'Sub Skip 2', 'Sub Skip 3', 'Sub Skip 4', 'Sub Primes', 'Inc 100 Hz', 'Inc 250 Hz', 'Inc 500 Hz', 'Inc 1000 Hz', 'Random', 'Random Hz']
     labels = []  # tkinter widget IDs for all labels
     harm_count = []  # tkinter widget IDs for all Harmonics Count spinboxes
     harm_count_val = []  # tkinter widget actual value for all Harmonics Count spinboxes
@@ -31,6 +29,7 @@ class ImageSoundGUI:
     imgsize = []
     seg = {}
     textid = 0
+    was_previewed = False
 
     def __init__(self):
         # root window of the whole program
@@ -44,7 +43,7 @@ class ImageSoundGUI:
         self.h = self.wh * 0.75
         self.x = (self.ws / 2) - (self.w / 2)
         self.y = (self.wh / 2) - (self.h / 2)
-        self.root.geometry('800x600+%d+%d' % (self.x-40, self.y))
+        self.root.geometry('800x600+%d+%d' % (self.x, self.y-25))
 
         # Options menu variable
         self.SRselect = StringVar()
@@ -270,6 +269,7 @@ class ImageSoundGUI:
         if self.is_img_loaded != 0:
             self.btn_preview.config(state=DISABLED)
             self.btn_render.config(state=DISABLED)
+            self.was_previewed = False
             self.seg.clear()
             for i in range(self.NUM_TABS):
                 self.viewport.delete('line' + str(i))
@@ -379,20 +379,25 @@ class ImageSoundGUI:
 
     def PreviewAudio(self, event=None):
         if self.btn_preview.cget('state') != DISABLED:
+            self.was_previewed = True
             self.dsp.render_segments(self.seg, preview=True, filename=None)
 
     def RenderToFile(self, event=None):
         if self.btn_render.cget('state') != DISABLED:
             outfile = filedialog.asksaveasfilename(title='Render To File...', filetypes=[('WAV files', '.wav')], defaultextension='.wav')
             if outfile != '':
-                self.dsp.render_segments(self.seg, preview=False, filename=outfile)
+                # just write the file if it was already previewed, don't recalculate it
+                if self.was_previewed:
+                    self.dsp.generate_sample(out_buffer=None, preview=False, filename=outfile, was_previewed=True)
+                else:
+                    self.dsp.render_segments(self.seg, preview=False, filename=outfile)
             else:
                 return
 
     def About(self, event=None):
         aboutscreen = Toplevel()
         aboutscreen.title('About ImageSound')
-        info = Label(aboutscreen, text='Programmed by Mario Krušelj\n\n\nMaster\'s Degree Thesis\n\nConverting Digital Image to Sound\nUsing Additive Synthesis\n\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n\n © 2015-20xx', justify='left')
+        info = Label(aboutscreen, text='Programmed by Mario Krušelj\n\n\nMaster\'s Degree Thesis\n\nConverting Digital Image to Sound\nUsing Superposed and Parameterized\nVectors and Additive Synthesis\n\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n\n © 2015-20xx', justify='left')
         info.grid(padx=10, pady=10, sticky=N)
         # if the program is loaded from within ImageSound.data folder
         try:
@@ -433,12 +438,15 @@ class ImageSoundGUI:
         self.current_tab = event.widget.index('current')
 
     def OnProgramQuit(self):
-        if messagebox.askokcancel('Quit?','Do you really want to quit ImageSound?'):
-            ini = open('ImageSound.ini','w+')
-            ini.write('sample_rate=' + self.SRselect.get() + '\n')
-            ini.write('img_preview=' + self.ImPreview.get() + '\n')
-            ini.write('antialiasing=' + self.AntiAlias.get() + '\n')
-            ini.close()
+        if messagebox.askokcancel('Quit ImageSound','Do you really want to quit ImageSound?'):
+            try:
+                ini = open('ImageSound.ini','w+')
+                ini.write('sample_rate=' + self.SRselect.get() + '\n')
+                ini.write('img_preview=' + self.ImPreview.get() + '\n')
+                ini.write('antialiasing=' + self.AntiAlias.get() + '\n')
+                ini.close()
+            except:
+                pass
             self.root.destroy()
 
     def OnMouseWheel(self, event):

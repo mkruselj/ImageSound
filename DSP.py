@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from numpy import linspace, sin, pi, int16, array, append, multiply
 from scipy.io.wavfile import write as writewav
 from scipy.interpolate import UnivariateSpline as interpolate
@@ -10,6 +12,7 @@ SAMPLE_RATE = 44100
 ANTIALIASING = 1
 
 class Dsp(object):
+    output = 0
 
     def __init__(self, img=None, gui=None):
         self.img = img
@@ -18,6 +21,14 @@ class Dsp(object):
 
         # precompute sequential odd numbers
         self.odds = [x for x in range(256) if x % 2]
+        # precompute first 128 prime numbers
+        N = 720    # 128th prime number is 719, this is the top limit
+        a = [1] * N
+        x = range
+        for i in x(2, N):
+            if a[i]:
+                for j in x(i * i, N, i) : a[j] = 0
+        self.primes = [i for i in x(len(a)) if a[i] == 1][2:]
 
     def set_img(self, img):
         self.img = img
@@ -30,14 +41,15 @@ class Dsp(object):
            midi[x] = (a / 32) * (pow(2,((x - 9) / 12)))
         return midi
 
-    def generate_sample(self, ob, preview, filename):
-        print("* Generating audio...")
-        tone_out = array(ob, dtype=int16)
+    def generate_sample(self, out_buffer, preview, filename, was_previewed=None):
+        if not was_previewed:
+            print("* Generating audio...")
+            self.output = array(out_buffer, dtype=int16)
 
         if preview:
             print("* Previewing audio...")
 
-            bytestream = tone_out.tobytes()
+            bytestream = self.output.tobytes()
             pya = pyaudio.PyAudio()
             stream = pya.open(format=pya.get_format_from_width(width=2), channels=1, rate=SAMPLE_RATE, output=True)
             stream.write(bytestream)
@@ -47,11 +59,11 @@ class Dsp(object):
             pya.terminate()
             print("* Audio preview completed!")
         else:
-            writewav(filename, SAMPLE_RATE, tone_out)
-            print("* Wrote audio to file!")
+            writewav(filename, SAMPLE_RATE, self.output)
+            print("* Wrote audio to %s!" % filename)
 
-    def note(self, freq, len, amp=1, rate=SAMPLE_RATE):
-        t = linspace(0,len,len * rate)
+    def note(self, freq, length, amp, rate=SAMPLE_RATE):
+        t = linspace(0,length,length * rate)
         data = sin(2 * pi * freq * t) * amp
         return data.astype(int16)
 
@@ -61,78 +73,90 @@ class Dsp(object):
         harm_mode = self.gui.harm_mode_var[key].get()
         harm_count = self.gui.harm_count_val[key]
         midi_note_number = int(self.gui.baseline_freq[key].get())
+        read_time = int(self.gui.read_speed[key].get())
+        delay_time = int(self.gui.delay_time[key].get())
         base_freq = self.midi_notes[midi_note_number]
-        buffer_length = int(self.gui.read_speed[key].get())
-        delay_buffer_length = int(self.gui.delay_time[key].get())
 
         # handle harmonics settings
-        harmonics = []
-        harmonics.append(base_freq)
-        rndlist = random.sample(range(2,256),128)
+        harmonic_freqs = []
+        harmonic_freqs.append(base_freq)
+
+        # create random harmonics
+        rnd_list = random.sample(range(2,238 - midi_note_number),128)
+        rnd_list_hz = random.sample(range(int(base_freq) + 50,SAMPLE_RATE // (ANTIALIASING + 1)),128)
 
         for h in range(1,harm_count):
             if harm_mode == 'All':
                 freq = base_freq * (h + 1)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Even':
                 freq = base_freq * (h * 2)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Odd':
                 freq = base_freq * self.odds[h]
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Skip 2':
                 freq = base_freq * (self.odds[h] + h)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Skip 3':
                 freq = base_freq * (self.odds[h] + h + h)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Skip 4':
                 freq = base_freq * (self.odds[h] + h + h + h)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
+            elif harm_mode == 'Primes':
+                freq = base_freq * self.primes[h]
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Sub All':
                 freq = base_freq / (h + 1)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Sub Even':
                 freq = base_freq / (h * 2)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Sub Odd':
                 freq = base_freq / self.odds[h]
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Sub Skip 2':
                 freq = base_freq / (self.odds[h] + h)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Sub Skip 3':
                 freq = base_freq / (self.odds[h] + h + h)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Sub Skip 4':
                 freq = base_freq / (self.odds[h] + h + h + h)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
+            elif harm_mode == 'Sub Primes':
+                freq = base_freq / self.primes[h]
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Inc 100 Hz':
                 freq = base_freq + (100 * h)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Inc 250 Hz':
                 freq = base_freq + (250 * h)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Inc 500 Hz':
                 freq = base_freq + (500 * h)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Inc 1000 Hz':
                 freq = base_freq + (1000 * h)
-                harmonics.append(freq)
+                harmonic_freqs.append(freq)
             elif harm_mode == 'Random':
-                freq = base_freq * rndlist[h]
-                harmonics.append(freq)
+                freq = base_freq * rnd_list[h]
+                harmonic_freqs.append(freq)
+            elif harm_mode == 'Random Hz':
+                freq = rnd_list_hz[h]
+                harmonic_freqs.append(freq)
 
         # list with all the harmonics to be generated
-        waveforms = list()
+        harmonics = list()
 
         # generate sine waves
-        for j, harm in enumerate(harmonics):
+        for j, harm in enumerate(harmonic_freqs):
             # check if harmonic goes beyond Nyquist and stop processing, if antialiasing enabled
             if harm > SAMPLE_RATE / 2 and ANTIALIASING == 1:
                 break
             print("    * Processing harmonic #" + str(j+1) + ', ' + str(harm) + ' Hz')
-            sine = self.note(harm,buffer_length / 1000, amp=MAX_AMPLITUDE / harm_count, rate=SAMPLE_RATE)
+            sine = self.note(freq=harm, length=read_time / 1000, amp=MAX_AMPLITUDE / harm_count, rate=SAMPLE_RATE)
             # get pixel luminosity data
             luminosity_values = []
             x, y = seg[j].shape
@@ -145,35 +169,35 @@ class Dsp(object):
             luminosity_x = linspace(0,1,len(luminosity_values))
             luminosity_values = array(luminosity_values)
             spl = interpolate(luminosity_x, luminosity_values, k=1, s=0)
-            amplitude_buff_space = linspace(0,1,(buffer_length / 1000) * SAMPLE_RATE)
+            amplitude_buff_space = linspace(0,1,(read_time / 1000) * SAMPLE_RATE)
 
-            waveforms.append(sine * spl(amplitude_buff_space))
+            harmonics.append(sine * spl(amplitude_buff_space))
 
-        waveform = sum(waveforms)
+        waveform = sum(harmonics)
 
         # generate empty buffer for delay time
-        dly = self.note(1,delay_buffer_length / 1000, amp=0, rate=SAMPLE_RATE)
+        dly = self.note(1,delay_time / 1000, amp=0, rate=SAMPLE_RATE)
 
         # merge the delay time with the generated waveform
         rendered = append(dly,waveform)
 
         return rendered
 
-    def render_segments(self, segs, preview, filename):
+    def render_segments(self, vectors, preview, filename):
         print("* Rendering vectors...")
-        buffs = []
-        for k in segs.keys():
-            buffs.append(self.render_segment(segs[k], k))
-        self.sum_buffers(buffs, preview, filename)
+        buffers = []
+        for k in vectors.keys():
+            buffers.append(self.render_segment(vectors[k], k))
+        self.sum_buffers(buffers, preview, filename)
 
-    def sum_buffers(self, buffs, preview, filename):
+    def sum_buffers(self, buffers, preview, filename):
         print("* Summing vector buffers...")
         max_len = 0
-        for buff in buffs:
+        for buff in buffers:
             if len(buff) > max_len:
                 max_len = len(buff)
-        out_buff = [0] * max_len
-        for buff in buffs:
+        out_buffer = [0] * max_len
+        for buff in buffers:
             for i in range(len(buff)):
-                out_buff[i] += buff[i] / len(buffs) # dividing with number of vectors used to prevent clipping
-        self.generate_sample(out_buff, preview, filename)
+                out_buffer[i] += buff[i] / len(buffers) # dividing with number of vectors used to prevent clipping
+        self.generate_sample(out_buffer, preview, filename)
