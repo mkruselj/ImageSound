@@ -20,7 +20,7 @@ class Dsp(object):
         self.midi_notes = self.generate_midi_dict()
 
         # precompute sequential odd numbers
-        self.odds = [x for x in range(256) if x % 2]
+        self.odds = [x for x in range(512) if x % 2]
         # precompute first 128 prime numbers
         N = 720    # 128th prime number is 719, this is the top limit
         a = [1] * N
@@ -37,7 +37,7 @@ class Dsp(object):
     def generate_midi_dict(self):
         midi = {}
         a = 440;
-        for x in range(128):
+        for x in range(145):
            midi[x] = (a / 32) * (pow(2,((x - 9) / 12)))
         return midi
 
@@ -82,8 +82,8 @@ class Dsp(object):
         harmonic_freqs.append(base_freq)
 
         # create random harmonics
-        rnd_list = random.sample(range(2,238 - midi_note_number),128)
-        rnd_list_hz = random.sample(range(int(base_freq) + 50,SAMPLE_RATE // (ANTIALIASING + 1)),128)
+        rnd_list = random.sample(range(2,256),128)
+        rnd_list_hz = random.sample(range(int(base_freq) + 10,SAMPLE_RATE // (ANTIALIASING + 1)),128)
 
         for h in range(1,harm_count):
             if harm_mode == 'All':
@@ -162,7 +162,7 @@ class Dsp(object):
             x, y = seg[j].shape
             for i in range(x):
                 R, G, B = int(seg[j][i,0]), int(seg[j][i,1]), int(seg[j][i,2])
-                luminosity = sqrt(0.299 * pow(R,2) + 0.587 * pow(G,2) + 0.114 * pow(B,2)) / 255
+                luminosity = sqrt(0.299 * R * R + 0.587 * G * G + 0.114 * B * B) / 255
                 luminosity_values.append(luminosity)
 
             # now interpolate the values with the amplitude buffer
