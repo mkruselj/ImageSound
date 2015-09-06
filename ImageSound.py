@@ -5,26 +5,17 @@ from tkinter import filedialog, ttk, messagebox
 from PIL import Image, ImageTk
 from numpy import array
 from inspect import getsourcefile
-<<<<<<< HEAD
-import skimage.draw, time, DSP
-=======
 from os.path import abspath, splitdrive
 import skimage.draw, subprocess, time, DSP
->>>>>>> 154ec6267bc74439d8d192cbddc17f4d7cc9df48
 
 class ImageSoundGUI:
     NUM_TABS = 16
     NUM_PARTIALS = 128
     COLORS = ('#FF0000', '#FF9900', '#FFBB00', '#FFFF00', '#99FF00', '#00FF00', '#00FF99', '#00FFCC',
               '#00CCFF', '#0099FF', '#0000FF', '#9900FF', '#CC00FF', '#FF00FF', '#FF0099', '#FF9999')
-<<<<<<< HEAD
-    MODE_OPT = ['All', 'Even', 'Odd', 'Skip 2', 'Skip 3', 'Skip 4', 'Primes', 'Sub All',
-                'Sub Even', 'Sub Odd', 'Sub Skip 2', 'Sub Skip 3', 'Sub Skip 4', 'Sub Primes', 'Inc 100 Hz', 'Inc 250 Hz', 'Inc 500 Hz', 'Inc 1000 Hz', 'Random', 'Random Hz']
-=======
     MODE_OPT = ['All', 'Even', 'Odd', 'Skip 2', 'Skip 3', 'Skip 4', 'Primes',
                 'Sub All', 'Sub Even', 'Sub Odd', 'Sub Skip 2', 'Sub Skip 3', 'Sub Skip 4', 'Sub Primes',
                 'Inc 100 Hz', 'Inc 250 Hz', 'Inc 500 Hz', 'Inc 1000 Hz', 'Random', 'Random Hz']
->>>>>>> 154ec6267bc74439d8d192cbddc17f4d7cc9df48
     labels = []  # tkinter widget IDs for all labels
     harm_count = []  # tkinter widget IDs for all Harmonics Count spinboxes
     harm_count_val = []  # tkinter widget actual value for all Harmonics Count spinboxes
@@ -54,11 +45,7 @@ class ImageSoundGUI:
         self.h = self.wh * 0.75
         self.x = (self.ws / 2) - (self.w / 2)
         self.y = (self.wh / 2) - (self.h / 2)
-<<<<<<< HEAD
-        self.root.geometry('800x600+%d+%d' % (self.x, self.y-25))
-=======
         self.root.geometry('617x600+%d+%d' % (self.x, self.y-50))
->>>>>>> 154ec6267bc74439d8d192cbddc17f4d7cc9df48
 
         # Options menu variable
         self.SRselect = StringVar()
@@ -117,11 +104,7 @@ class ImageSoundGUI:
                                      variable=self.SRselect)
         menu_options.add_radiobutton(label='176.4 kHz',
                                      value=5,
-<<<<<<< HEAD
-                                     underline=1,
-=======
                                      underline=4,
->>>>>>> 154ec6267bc74439d8d192cbddc17f4d7cc9df48
                                      command=self.ChangeSR,
                                      variable=self.SRselect)
         menu_options.add_radiobutton(label='192 kHz',
@@ -242,10 +225,7 @@ class ImageSoundGUI:
         self.root.bind('<Control-p>', self.PreviewAudio)
         self.root.bind('<Control-r>', self.RenderToFile)
         self.root.bind('<Control-a>', self.ClearAllLines)
-<<<<<<< HEAD
-=======
         self.root.bind('<F1>', self.Docs)
->>>>>>> 154ec6267bc74439d8d192cbddc17f4d7cc9df48
         self.root.bind('<F12>', self.About)
 
         # protocol for exiting the program
@@ -456,13 +436,9 @@ class ImageSoundGUI:
     def About(self, event=None):
         aboutscreen = Toplevel()
         aboutscreen.title('About ImageSound')
-<<<<<<< HEAD
-        info = Label(aboutscreen, text='Programmed by Mario Krušelj\n\n\nMaster\'s Degree Thesis\n\nConverting Digital Image to Sound\nUsing Superposed and Parameterized\nVectors and Additive Synthesis\n\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n\n © 2015-20xx', justify='left')
-=======
         info = Label(aboutscreen, justify='left', text='Programmed by Mario Krušelj\n\n\nMaster\'s Degree Thesis\n\n' +
                     'Converting Digital Image to Sound\nUsing Superposed and Parameterized\nVectors and Additive Synthesis\n\n\n' +
                     'Faculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n\n © 2015-20xx')
->>>>>>> 154ec6267bc74439d8d192cbddc17f4d7cc9df48
         info.grid(padx=10, pady=10, sticky=N)
         # if the program is loaded from within ImageSound.data folder
         try:
