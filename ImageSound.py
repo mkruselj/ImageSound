@@ -70,7 +70,7 @@ class ImageSoundGUI:
                               underline=0,
                               command=self.RenderToFile)
         menu_file.add_command(label='Clear All Lines',
-                              accelerator='Ctrl+L',
+                              accelerator='Ctrl+A',
                               underline=8,
                               command=self.ClearAllLines)
         menu_file.add_separator()
@@ -80,18 +80,50 @@ class ImageSoundGUI:
                               underline=1)
         menu_options = Menu(main_menu, tearoff=0)
         menu_options.add_command(label='Sample Rate:', state=DISABLED)
-        menu_options.add_radiobutton(label='44.1 kHz', value=1, command=self.ChangeSR, variable=self.SRselect)
-        menu_options.add_radiobutton(label='48 kHz', value=2, command=self.ChangeSR, variable=self.SRselect)
-        menu_options.add_radiobutton(label='88.2 kHz', value=3, command=self.ChangeSR, variable=self.SRselect)
-        menu_options.add_radiobutton(label='96 kHz', value=4, command=self.ChangeSR, variable=self.SRselect)
-        menu_options.add_radiobutton(label='176.4 kHz', value=5, command=self.ChangeSR, variable=self.SRselect)
-        menu_options.add_radiobutton(label='192 kHz', value=6, command=self.ChangeSR, variable=self.SRselect)
+        menu_options.add_radiobutton(label='44.1 kHz',
+                                     underline=3,
+                                     value=1,
+                                     command=self.ChangeSR,
+                                     variable=self.SRselect)
+        menu_options.add_radiobutton(label='48 kHz',
+                                     value=2,
+                                     underline=1,
+                                     command=self.ChangeSR,
+                                     variable=self.SRselect)
+        menu_options.add_radiobutton(label='88.2 kHz',
+                                     value=3,
+                                     underline=3,
+                                     command=self.ChangeSR,
+                                     variable=self.SRselect)
+        menu_options.add_radiobutton(label='96 kHz',
+                                     value=4,
+                                     underline=1,
+                                     command=self.ChangeSR,
+                                     variable=self.SRselect)
+        menu_options.add_radiobutton(label='176.4 kHz',
+                                     value=5,
+                                     underline=1,
+                                     command=self.ChangeSR,
+                                     variable=self.SRselect)
+        menu_options.add_radiobutton(label='192 kHz',
+                                     value=6,
+                                     underline=1,
+                                     command=self.ChangeSR,
+                                     variable=self.SRselect)
         menu_options.add_command(label='Image Preview:', state=DISABLED)
-        menu_options.add_radiobutton(label='Original', value=1, command=self.ImPreviewMode, variable=self.ImPreview)
-        menu_options.add_radiobutton(label='Luminance', value=2, command=self.ImPreviewMode, variable=self.ImPreview)
+        menu_options.add_radiobutton(label='Original',
+                                     value=1,
+                                     underline=0,
+                                     command=self.ImPreviewMode,
+                                     variable=self.ImPreview)
+        menu_options.add_radiobutton(label='Luminance',
+                                     value=2,
+                                     underline=0,
+                                     command=self.ImPreviewMode,
+                                     variable=self.ImPreview)
         menu_options.add_command(label='Antialiasing:', state=DISABLED)
-        menu_options.add_radiobutton(label='Disabled', value=1, command=self.AAMode, variable=self.AntiAlias)
-        menu_options.add_radiobutton(label='Enabled', value=2, command=self.AAMode, variable=self.AntiAlias)
+        menu_options.add_radiobutton(label='Disabled', value=1, underline=0, command=self.AAMode, variable=self.AntiAlias)
+        menu_options.add_radiobutton(label='Enabled', value=2, underline=0, command=self.AAMode, variable=self.AntiAlias)
         menu_help = Menu(main_menu, tearoff=0)
         menu_help.add_command(label='About...',
                               accelerator='F12',
@@ -194,7 +226,7 @@ class ImageSoundGUI:
         self.root.bind('<Control-q>', self.CloseFile)
         self.root.bind('<Control-p>', self.PreviewAudio)
         self.root.bind('<Control-r>', self.RenderToFile)
-        self.root.bind('<Control-l>', self.ClearAllLines)
+        self.root.bind('<Control-a>', self.ClearAllLines)
         self.root.bind('<F12>', self.About)
 
         # protocol for exiting the program
@@ -257,7 +289,7 @@ class ImageSoundGUI:
                 self.viewport.create_image((4, 4), anchor=NW, image=im_lum_tk, tag='image')
             self.viewport.tag_lower('image')
 
-    def ResizeCanvas(self, event):
+    def ResizeCanvas(self, event=None):
         if self.is_img_loaded == 0:
             if self.textid != 0:
                 self.viewport.delete('openfiletext')
