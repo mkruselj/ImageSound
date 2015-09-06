@@ -5,15 +5,26 @@ from tkinter import filedialog, ttk, messagebox
 from PIL import Image, ImageTk
 from numpy import array
 from inspect import getsourcefile
+<<<<<<< HEAD
 import skimage.draw, time, DSP
+=======
+from os.path import abspath, splitdrive
+import skimage.draw, subprocess, time, DSP
+>>>>>>> 154ec6267bc74439d8d192cbddc17f4d7cc9df48
 
 class ImageSoundGUI:
     NUM_TABS = 16
     NUM_PARTIALS = 128
     COLORS = ('#FF0000', '#FF9900', '#FFBB00', '#FFFF00', '#99FF00', '#00FF00', '#00FF99', '#00FFCC',
               '#00CCFF', '#0099FF', '#0000FF', '#9900FF', '#CC00FF', '#FF00FF', '#FF0099', '#FF9999')
+<<<<<<< HEAD
     MODE_OPT = ['All', 'Even', 'Odd', 'Skip 2', 'Skip 3', 'Skip 4', 'Primes', 'Sub All',
                 'Sub Even', 'Sub Odd', 'Sub Skip 2', 'Sub Skip 3', 'Sub Skip 4', 'Sub Primes', 'Inc 100 Hz', 'Inc 250 Hz', 'Inc 500 Hz', 'Inc 1000 Hz', 'Random', 'Random Hz']
+=======
+    MODE_OPT = ['All', 'Even', 'Odd', 'Skip 2', 'Skip 3', 'Skip 4', 'Primes',
+                'Sub All', 'Sub Even', 'Sub Odd', 'Sub Skip 2', 'Sub Skip 3', 'Sub Skip 4', 'Sub Primes',
+                'Inc 100 Hz', 'Inc 250 Hz', 'Inc 500 Hz', 'Inc 1000 Hz', 'Random', 'Random Hz']
+>>>>>>> 154ec6267bc74439d8d192cbddc17f4d7cc9df48
     labels = []  # tkinter widget IDs for all labels
     harm_count = []  # tkinter widget IDs for all Harmonics Count spinboxes
     harm_count_val = []  # tkinter widget actual value for all Harmonics Count spinboxes
@@ -35,7 +46,7 @@ class ImageSoundGUI:
         # root window of the whole program
         self.root = Tk()
         self.root.title('ImageSound')
-        self.root.minsize(800, 600)
+        self.root.minsize(617, 600)
         # root window dimensions and positioning
         self.ws = self.root.winfo_screenwidth()
         self.wh = self.root.winfo_screenheight()
@@ -43,7 +54,11 @@ class ImageSoundGUI:
         self.h = self.wh * 0.75
         self.x = (self.ws / 2) - (self.w / 2)
         self.y = (self.wh / 2) - (self.h / 2)
+<<<<<<< HEAD
         self.root.geometry('800x600+%d+%d' % (self.x, self.y-25))
+=======
+        self.root.geometry('617x600+%d+%d' % (self.x, self.y-50))
+>>>>>>> 154ec6267bc74439d8d192cbddc17f4d7cc9df48
 
         # Options menu variable
         self.SRselect = StringVar()
@@ -102,7 +117,11 @@ class ImageSoundGUI:
                                      variable=self.SRselect)
         menu_options.add_radiobutton(label='176.4 kHz',
                                      value=5,
+<<<<<<< HEAD
                                      underline=1,
+=======
+                                     underline=4,
+>>>>>>> 154ec6267bc74439d8d192cbddc17f4d7cc9df48
                                      command=self.ChangeSR,
                                      variable=self.SRselect)
         menu_options.add_radiobutton(label='192 kHz',
@@ -125,7 +144,11 @@ class ImageSoundGUI:
         menu_options.add_radiobutton(label='Disabled', value=1, underline=0, command=self.AAMode, variable=self.AntiAlias)
         menu_options.add_radiobutton(label='Enabled', value=2, underline=0, command=self.AAMode, variable=self.AntiAlias)
         menu_help = Menu(main_menu, tearoff=0)
-        menu_help.add_command(label='About...',
+        menu_help.add_command(label='Documentation',
+                              accelerator='F1',
+                              underline=0,
+                              command=self.Docs)
+        menu_help.add_command(label='About ImageSound',
                               accelerator='F12',
                               underline=0,
                               command=self.About)
@@ -153,42 +176,36 @@ class ImageSoundGUI:
         for i in range(self.NUM_TABS):
             frame = Frame()
             frame.config(relief='ridge', highlightthickness=4, highlightcolor=self.COLORS[i], highlightbackground=self.COLORS[i])
-            self.tabs.add(frame, text='  ' + str(i+1) + '  ')
+            self.tabs.add(frame, text='  ' + str(i + 1) + '  ')
             label = Label(frame, text='Harmonics Count:')
             label.grid(row=0, padx=10, pady=5, sticky=E)
             self.labels += [label]
-            self.harm_count += [Spinbox(frame, command=self.AdjustLineWidth, from_=1, to=self.NUM_PARTIALS, width=5, justify='right', validate='all', validatecommand=self.vldt_ifnum_cmd)]
+            self.harm_count += [Spinbox(frame, command=self.AdjustLineWidth, from_=1, to=self.NUM_PARTIALS, width=5,
+                                        justify='right', validate='all', validatecommand=self.vldt_ifnum_cmd)]
             self.harm_count[i].insert(0, 8)
             self.harm_count[i].delete(1, 'end')
             self.harm_count[i].grid(padx=5, pady=10, row=0, column=1, sticky=W)
             self.harm_count[i].bind('<MouseWheel>', self.OnMouseWheel)
-            self.harm_count[i].bind('<Control-c>', lambda e: 'break')
-            self.harm_count[i].bind('<Control-v>', lambda e: 'break')
-            self.harm_count[i].bind('<Control-x>', lambda e: 'break')
             self.harm_count_val.append(int(self.harm_count[i].get()))
-            label = Label(frame, text='Baseline (MIDI Note):')
+            label = Label(frame, text='Base Note (MIDI):')
             label.grid(padx=10, pady=5, row=0, column=2, sticky=E)
             self.labels += [label]
-            self.baseline_freq += [Spinbox(frame, from_=21, to=108, width=6, justify='right', validate='all', validatecommand=self.vldt_ifnum_cmd)]
+            self.baseline_freq += [Spinbox(frame, from_=21, to=108, width=6, justify='right', validate='all',
+                                           validatecommand=self.vldt_ifnum_cmd)]
             # setting the default value to 69 by invoking button presses of the spinbox. hacky, but works. needs to be like this!
             for j in range(48):
                 self.baseline_freq[i].invoke('buttonup')
-            self.baseline_freq[i].grid(
-                padx=5, pady=5, row=0, column=3, sticky=W)
+            self.baseline_freq[i].grid(padx=5, pady=5, row=0, column=3, sticky=W)
             self.baseline_freq[i].bind('<MouseWheel>', self.OnMouseWheel)
-            self.baseline_freq[i].bind('<Control-c>', lambda e: 'break')
-            self.baseline_freq[i].bind('<Control-v>', lambda e: 'break')
-            self.baseline_freq[i].bind('<Control-x>', lambda e: 'break')
             label = Label(frame, text='Read Speed (ms):')
             label.grid(padx=10, pady=5, row=0, column=4, sticky=E)
             self.labels += [label]
-            self.read_speed += [Spinbox(frame, from_=1000, to=60000, width=6, increment=10, justify='right', validate='all', validatecommand=self.vldt_ifnum_cmd)]
+            self.read_speed += [Spinbox(frame, from_=100, to=60000, width=6, increment=10, justify='right', validate='all',
+                                               validatecommand=self.vldt_ifnum_cmd)]
+            self.read_speed[i].insert(1, 0)
             self.read_speed[i].grid(padx=5, pady=5, row=0, column=5, sticky=W)
             self.read_speed[i].bind('<MouseWheel>', self.OnMouseWheel)
             self.read_speed[i].bind('<Control-MouseWheel>', self.OnMouseWheelCtrl)
-            self.read_speed[i].bind('<Control-c>', lambda e: 'break')
-            self.read_speed[i].bind('<Control-v>', lambda e: 'break')
-            self.read_speed[i].bind('<Control-x>', lambda e: 'break')
             label = Label(frame, text='Harmonics Mode:')
             label.grid(padx=10, row=1, column=0, sticky=E)
             self.labels += [label]
@@ -200,19 +217,17 @@ class ImageSoundGUI:
             label = Label(frame, text='Delay Time (ms):')
             label.grid(padx=10, row=1, column=4, sticky=E)
             self.labels += [label]
-            self.delay_time += [Spinbox(frame, from_=0, to=60000, width=6, increment=10, justify='right', validate='all', validatecommand=self.vldt_ifnum_cmd)]
+            self.delay_time += [Spinbox(frame, from_=0, to=60000, width=6, increment=10, justify='right', validate='all',
+                                               validatecommand=self.vldt_ifnum_cmd)]
             self.delay_time[i].grid(padx=5, pady=10, row=1, column=5, sticky=W)
             self.delay_time[i].bind('<MouseWheel>', self.OnMouseWheel)
             self.delay_time[i].bind('<Control-MouseWheel>', self.OnMouseWheelCtrl)
-            self.delay_time[i].bind('<Control-c>', lambda e: 'break')
-            self.delay_time[i].bind('<Control-v>', lambda e: 'break')
-            self.delay_time[i].bind('<Control-x>', lambda e: 'break')
 
         # layout managing
         self.viewport.grid(columnspan=3, padx=5, pady=5, sticky=N+S+W+E)
-        self.btn_preview.grid(row=1, padx=85, pady=10, ipadx=5, ipady=5, sticky=W)
-        self.btn_render.grid(row=1, padx=200, pady=10, ipadx=5, ipady=5, sticky=W)
-        self.btn_clear.grid(row=1, padx=305, pady=10, ipadx=5, ipady=5, sticky=W)
+        self.btn_preview.grid(row=1, padx=58, pady=10, ipadx=5, ipady=5, sticky=W)
+        self.btn_render.grid(row=1, padx=162, pady=10, ipadx=5, ipady=5, sticky=W)
+        self.btn_clear.grid(row=1, padx=272, pady=10, ipadx=5, ipady=5, sticky=W)
         self.tabs.grid(row=2, padx=5, pady=5, ipadx=5, ipady=2, sticky=W)
 
         # weights of rows and columns
@@ -227,6 +242,10 @@ class ImageSoundGUI:
         self.root.bind('<Control-p>', self.PreviewAudio)
         self.root.bind('<Control-r>', self.RenderToFile)
         self.root.bind('<Control-a>', self.ClearAllLines)
+<<<<<<< HEAD
+=======
+        self.root.bind('<F1>', self.Docs)
+>>>>>>> 154ec6267bc74439d8d192cbddc17f4d7cc9df48
         self.root.bind('<F12>', self.About)
 
         # protocol for exiting the program
@@ -295,7 +314,8 @@ class ImageSoundGUI:
                 self.viewport.delete('openfiletext')
             # position text on canvas to notify user he can load the image by clicking it
             textpos = (self.viewport.winfo_width(), self.viewport.winfo_height())
-            self.textid = self.viewport.create_text(textpos[0] / 2, textpos[1] / 2, text="Click here to load an image!", justify='center', font='arial 20 bold', tag='openfiletext')
+            self.textid = self.viewport.create_text(textpos[0] / 2, textpos[1] / 2, text="Click here to load an image!",
+                                                    justify='center', font='arial 20 bold', tag='openfiletext')
 
     def ClearAllLines(self, event=None):
         if self.is_img_loaded != 0:
@@ -361,7 +381,8 @@ class ImageSoundGUI:
                     currenty = event.y
                 # draw the vector
                 objectId = 1
-                self.CustomLine(self.start.x, self.start.y, currentx, currenty, width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
+                self.CustomLine(self.start.x, self.start.y, currentx, currenty, width=int(self.harm_count[self.current_tab].get()),
+                                color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
                 self.drawn = objectId
             except:
                 raise
@@ -371,7 +392,9 @@ class ImageSoundGUI:
         if self.viewport.find_withtag(tag):
             linecoords = self.viewport.coords(tag)
             self.viewport.delete(tag)
-            self.CustomLine(int(linecoords[0]), int(linecoords[1]), int(linecoords[2]), int(linecoords[3]), width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab], name='line' + str(self.current_tab), canvas=self.viewport)
+            self.CustomLine(int(linecoords[0]), int(linecoords[1]), int(linecoords[2]), int(linecoords[3]),
+                            width=int(self.harm_count[self.current_tab].get()), color=self.COLORS[self.current_tab],
+                            name='line' + str(self.current_tab), canvas=self.viewport)
             self.harm_count_val[self.current_tab] = int(self.harm_count[self.current_tab].get())
 
     def CloseFile(self, event=None):
@@ -387,10 +410,14 @@ class ImageSoundGUI:
             global im_tk
             global im_lum_tk
             imgfile = filedialog.askopenfilename(title='Open Image',
-                                                 filetypes=[('All supported files', '.bmp .jpg .jpeg .png'),
+                                                 filetypes=[('All supported files', '.bmp .eps .gif .jpg .jpeg .png .pbm .pgm .ppm .tif .tiff'),
                                                             ('Bitmap files', '.bmp'),
+                                                            ('EPS files', '.eps'),
+                                                            ('GIF files', '.gif'),
                                                             ('JPEG files', '.jpg .jpeg'),
-                                                            ('PNG files', '.png')])
+                                                            ('PNG files', '.png'),
+                                                            ('PPM files', '.pbm .pgm .ppm'),
+                                                            ('TIFF files', '.tif .tiff')])
             im = Image.open(imgfile)
             im_tk = ImageTk.PhotoImage(im)
             im_lum = im.convert('L')
@@ -429,7 +456,13 @@ class ImageSoundGUI:
     def About(self, event=None):
         aboutscreen = Toplevel()
         aboutscreen.title('About ImageSound')
+<<<<<<< HEAD
         info = Label(aboutscreen, text='Programmed by Mario Krušelj\n\n\nMaster\'s Degree Thesis\n\nConverting Digital Image to Sound\nUsing Superposed and Parameterized\nVectors and Additive Synthesis\n\n\nFaculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n\n © 2015-20xx', justify='left')
+=======
+        info = Label(aboutscreen, justify='left', text='Programmed by Mario Krušelj\n\n\nMaster\'s Degree Thesis\n\n' +
+                    'Converting Digital Image to Sound\nUsing Superposed and Parameterized\nVectors and Additive Synthesis\n\n\n' +
+                    'Faculty of Electrical Engineering\nJosip Juraj Strossmayer University of Osijek\n\n\n © 2015-20xx')
+>>>>>>> 154ec6267bc74439d8d192cbddc17f4d7cc9df48
         info.grid(padx=10, pady=10, sticky=N)
         # if the program is loaded from within ImageSound.data folder
         try:
@@ -445,6 +478,13 @@ class ImageSoundGUI:
         aboutscreen.bind('<Escape>', lambda close: aboutscreen.destroy())
         aboutscreen.bind('<Return>', lambda close: aboutscreen.destroy())
         self.ModalPopup(aboutscreen)
+
+    def Docs(self, event=None):
+        root = splitdrive(abspath(getsourcefile(lambda:0)))[0]
+        try:
+            proc = subprocess.Popen('explorer ' + root, shell=True)
+        except:
+            proc = subprocess.Popen('dip_gw.pdf', shell=True)
 
     def ModalPopup(self, wnd):
         time.sleep(0.1)
@@ -500,17 +540,6 @@ class ImageSoundGUI:
     def ValidateIfNum(self, new_value, user_input, widget_name):
         # disallow anything but numbers in the input
         valid = user_input == '' or user_input.isdigit()
-        # now that we've ensured the input is only integers, range checking!
-        if valid:
-            # get minimum and maximum values of the widget to be validated
-            minval = int(self.root.nametowidget(widget_name).config('from')[4])
-            maxval = int(self.root.nametowidget(widget_name).config('to')[4])
-            # make sure that input doesn't have more digits than the maximum value
-            # and that it's in min-max range
-            if new_value == '':
-                valid = False
-            elif len(new_value) > len(str(maxval)) or int(new_value) not in range(minval, maxval):
-                valid = False
         if not valid:
             self.root.bell()
         return valid
