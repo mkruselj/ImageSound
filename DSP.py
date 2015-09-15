@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from numpy import linspace, sin, pi, int16, array, append, multiply
+from numpy import linspace, sin, pi, int16, array, append, multiply, interp, max, abs
 from scipy.io.wavfile import write as writewav
 from scipy.interpolate import UnivariateSpline as interpolate
 from math import sqrt
@@ -62,14 +62,15 @@ class Dsp(object):
             writewav(filename, SAMPLE_RATE, self.output)
             print("* Wrote audio to %s!" % filename)
 
-    def note(self, freq, length, amp, rate=SAMPLE_RATE):
+    def generate_sine(self, freq, length, amp, rate=SAMPLE_RATE):
         t = linspace(0,length,length * rate)
         data = sin(2 * pi * freq * t) * amp
         return data.astype(int16)
 
     def render_segment(self, seg, key):
-        print("  * Vector %d:" % (key + 1))
+        print("  * Processing vector %d:" % (key + 1))
 
+        # get vector parameters from the GUI
         harm_mode = self.gui.harm_mode_var[key].get()
         harm_count = self.gui.harm_count_val[key]
         midi_note_number = int(self.gui.baseline_freq[key].get())
@@ -77,14 +78,15 @@ class Dsp(object):
         delay_time = int(self.gui.delay_time[key].get())
         base_freq = self.midi_notes[midi_note_number]
 
-        # handle harmonics settings
+        # a list of frequencies for all harmonics in the vector
         harmonic_freqs = []
         harmonic_freqs.append(base_freq)
 
-        # create random harmonics
+        # create lists with random harmonics and frequencies in Hz
         rnd_list = random.sample(range(2,256),128)
         rnd_list_hz = random.sample(range(int(base_freq) + 10,SAMPLE_RATE // (ANTIALIASING + 1)),128)
 
+        # calculate frequencies of harmonics according to the selected formula ("harmonics mode" parameter)
         for h in range(1,harm_count):
             if harm_mode == 'All':
                 freq = base_freq * (h + 1)
@@ -152,11 +154,11 @@ class Dsp(object):
 
         # generate sine waves
         for j, harm in enumerate(harmonic_freqs):
-            # check if harmonic goes beyond Nyquist and stop processing, if antialiasing enabled
+            # if antialiasing enabled, check if harmonic goes beyond Nyquist and stop processing
             if harm > SAMPLE_RATE / 2 and ANTIALIASING == 1:
                 break
-            print("    * Processing harmonic #" + str(j+1) + ', ' + str(harm) + ' Hz')
-            sine = self.note(freq=harm, length=read_time / 1000, amp=MAX_AMPLITUDE / harm_count, rate=SAMPLE_RATE)
+            print("    * Processing harmonic " + str(j+1) + ', ' + str(harm) + ' Hz')
+            sine = self.generate_sine(freq=harm, length=read_time / 1000, amp=MAX_AMPLITUDE, rate=SAMPLE_RATE)
             # get pixel luminosity data
             luminosity_values = []
             x, y = seg[j].shape
@@ -165,18 +167,20 @@ class Dsp(object):
                 luminosity = sqrt(0.299 * R * R + 0.587 * G * G + 0.114 * B * B) / 255
                 luminosity_values.append(luminosity)
 
-            # now interpolate the values with the amplitude buffer
+            # interpolate the values with the amplitude buffer
             luminosity_x = linspace(0,1,len(luminosity_values))
             luminosity_values = array(luminosity_values)
             spl = interpolate(luminosity_x, luminosity_values, k=1, s=0)
             amplitude_buff_space = linspace(0,1,(read_time / 1000) * SAMPLE_RATE)
 
+            # add the calculated harmonic to the harmonics list
             harmonics.append(sine * spl(amplitude_buff_space))
 
+        # sum all harmonics in the vector
         waveform = sum(harmonics)
 
         # generate empty buffer for delay time
-        dly = self.note(1,delay_time / 1000, amp=0, rate=SAMPLE_RATE)
+        dly = self.generate_sine(1,delay_time / 1000, amp=0, rate=SAMPLE_RATE)
 
         # merge the delay time with the generated waveform
         rendered = append(dly,waveform)
@@ -191,13 +195,20 @@ class Dsp(object):
         self.sum_buffers(buffers, preview, filename)
 
     def sum_buffers(self, buffers, preview, filename):
-        print("* Summing vector buffers...")
+        print("* Summing vectors...")
+        # determine which vector is the longest
         max_len = 0
         for buff in buffers:
             if len(buff) > max_len:
                 max_len = len(buff)
+        # create output buffer
         out_buffer = [0] * max_len
+        # sum all vectors
         for buff in buffers:
             for i in range(len(buff)):
-                out_buffer[i] += buff[i] / len(buffers) # dividing with number of vectors used to prevent clipping
+                out_buffer[i] += buff[i]
+        # normalize the result to max amplitude
+        out_buffer /= max(abs(out_buffer))
+        out_buffer *= MAX_AMPLITUDE
+        # generate the audio for output
         self.generate_sample(out_buffer, preview, filename)
