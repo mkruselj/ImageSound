@@ -389,6 +389,7 @@ class ImageSoundGUI:
             # keeps the reference to loaded image in this variable
             global im_tk
             global im_lum_tk
+            # open file dialog
             imgfile = filedialog.askopenfilename(title='Open Image',
                                                  filetypes=[('All supported files', '.bmp .eps .gif .jpg .jpeg .png .pbm .pgm .ppm .tif .tiff'),
                                                             ('Bitmap files', '.bmp'),
@@ -398,14 +399,17 @@ class ImageSoundGUI:
                                                             ('PNG files', '.png'),
                                                             ('PPM files', '.pbm .pgm .ppm'),
                                                             ('TIFF files', '.tif .tiff')])
+            # open the image, convert to grayscale
             im = Image.open(imgfile)
             im_tk = ImageTk.PhotoImage(im)
             im_lum = im.convert('L')
             im_lum_tk = ImageTk.PhotoImage(im_lum)
+            # convert the image to a numpy array
             self.imag = array(im)
-            self.imag = self.imag.swapaxes(1,0) # swap first two axes, numpy goes Y then X for some reason when importing image
+            self.imag = self.imag.swapaxes(1,0) # swap the axes, numpy reads Y first, then X, for some reason
+            # reference the numpy array in the DSP script
             self.dsp.set_img(self.imag)
-            # show the image
+            # show the image on GUI
             self.ClearAllLines()
             self.viewport.grid(sticky=N+W)
             self.viewport.config(width=im.size[0] + 4, height=im.size[1] + 4)
@@ -458,9 +462,9 @@ class ImageSoundGUI:
     def Docs(self, event=None):
         root = splitdrive(abspath(getsourcefile(lambda:0)))[0]
         try:
-            proc = subprocess.Popen('explorer ' + root, shell=True)
+            proc = subprocess.Popen('Mario Krušelj - Pretvorba digitalne slike u zvuk superponiranjem i parametrizacijom vektora.pdf', shell=True)
         except:
-            proc = subprocess.Popen('dip_gw.pdf', shell=True)
+            proc = subprocess.Popen('explorer ' + root, shell=True)
 
     def ModalPopup(self, wnd):
         time.sleep(0.1)
